@@ -8,6 +8,26 @@
 
 #include "server.h"
 
+/**
+ * Initialize the server with options
+ */
+RDMAServer::RDMAServer(RDMAOptions *opts) {
+	bool err;
+	this->options = opts;
+	this->hints = fi_allocinfo();
+	if (!hints) {
+		err = true;
+	}
+	// now lets retrieve the available network services
+	fi_getinfo(RDMA_FIVERSION, NULL, NULL, FI_SOURCE, hints, &this->fi);
+	if (this->fi) {
+		fi_info *next = this->fi;
+		while (next) {
+			fi_tostr(next, FI_TYPE_INFO);
+		}
+	}
+}
+
 void RDMAServer::StartServer() {
 
 }

@@ -1,12 +1,32 @@
 #include <string>
 
+#include <rdma/fabric.h>
+#include <rdma/fi_domain.h>
+#include <rdma/fi_endpoint.h>
+#include <rdma/fi_cm.h>
+#include <rdma/fi_tagged.h>
+#include <rdma/fi_rma.h>
+#include <rdma/fi_errno.h>
+
+enum rdma_comp_method {
+	FT_COMP_SPIN = 0,
+	FT_COMP_SREAD,
+	FT_COMP_WAITSET,
+	FT_COMP_WAIT_FD
+};
+
+enum rdma_rma_opcodes {
+	FT_RMA_READ = 1,
+	FT_RMA_WRITE,
+	FT_RMA_WRITEDATA,
+};
+
 char default_port[8] = "9228";
 
-struct fs_opts {
-  int iterations;
-  int warmup_iterations;
-  int transfer_size;
+class RDMAOptions {
+public:
   int window_size;
+  int transfer_size;
   char *src_port;
   char *dst_port;
   char *src_addr;
@@ -14,11 +34,9 @@ struct fs_opts {
   char *av_name;
   int sizes_enabled;
   int options;
-  enum ft_comp_method comp_method;
+  enum rdma_comp_method comp_method;
   int machr;
-  enum ft_rma_opcodes rma_op;
-  int argc;
-  char **argv;
+  enum rdma_rma_opcodes rma_op;
+  RDMAOptions();
 };
 
-void utils_parse_info(int op, char *optarg, struct fi_info *hints);
