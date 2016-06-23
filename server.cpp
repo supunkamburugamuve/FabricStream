@@ -20,7 +20,7 @@ RDMAServer::RDMAServer(RDMAOptions *opts) {
 		err = true;
 	}
 	// now lets retrieve the available network services
-	fi_getinfo(RDMA_FIVERSION, NULL, NULL, FI_SOURCE, hints, &this->fi);
+	fi_getinfo(RDMA_FIVERSION, NULL, NULL, FI_PROV_ATTR_ONLY, hints, &this->fi);
 	if (this->fi) {
 		fi_info *next = this->fi;
 		while (next) {
