@@ -10,7 +10,9 @@
 
 #include "utils.h"
 
+RDMAOptions::RDMAOptions() {
 
+}
 
 
 
