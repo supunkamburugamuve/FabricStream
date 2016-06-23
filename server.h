@@ -1,3 +1,6 @@
+#ifndef RDMA_SERVER_H_
+#define RDMA_SERVER_H_
+
 #include <list>
 #include <map>
 #include <utility>
@@ -20,3 +23,4 @@ class RDMAServer {
     struct fi_info *fi, *hints;
 };
 
+#endif

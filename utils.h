@@ -1,3 +1,6 @@
+#ifndef RDMA_UTILS_H_
+#define RDMA_UTILS_H_
+
 #include <string>
 
 #include <rdma/fabric.h>
@@ -40,3 +43,4 @@ public:
   RDMAOptions();
 };
 
+#endif
