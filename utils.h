@@ -24,7 +24,6 @@ enum rdma_rma_opcodes {
 	FT_RMA_WRITEDATA,
 };
 
-char default_port[8] = "9228";
 
 class RDMAOptions {
 public:

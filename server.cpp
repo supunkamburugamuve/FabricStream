@@ -13,6 +13,7 @@
  */
 RDMAServer::RDMAServer(RDMAOptions *opts) {
 	bool err;
+        char *fi_str;
 	this->options = opts;
 	this->hints = fi_allocinfo();
 	if (!hints) {
@@ -23,7 +24,9 @@ RDMAServer::RDMAServer(RDMAOptions *opts) {
 	if (this->fi) {
 		fi_info *next = this->fi;
 		while (next) {
-			fi_tostr(next, FI_TYPE_INFO);
+			fi_str = fi_tostr(next, FI_TYPE_INFO);
+                        printf("FI %s\n", fi_str);
+                        next = next->next;
 		}
 	}
 }
