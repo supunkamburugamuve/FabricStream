@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <rdma/fabric.h>
 #include <rdma/fi_domain.h>
 #include <rdma/fi_endpoint.h>
@@ -25,10 +27,13 @@ RDMAServer::RDMAServer(RDMAOptions *opts) {
 		fi_info *next = this->fi;
 		while (next) {
 			fi_str = fi_tostr(next, FI_TYPE_INFO);
-                        printf("FI %s\n", fi_str);
-                        next = next->next;
+            std::cout << "FI" << fi_str << std::endl;
+            next = next->next;
 		}
 	}
+
+	// now lets incorporate the options
+
 }
 
 void RDMAServer::StartServer() {

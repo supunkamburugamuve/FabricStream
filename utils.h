@@ -27,18 +27,11 @@ enum rdma_rma_opcodes {
 
 class RDMAOptions {
 public:
-  int window_size;
-  int transfer_size;
   char *src_port;
   char *dst_port;
   char *src_addr;
   char *dst_addr;
-  char *av_name;
-  int sizes_enabled;
-  int options;
-  enum rdma_comp_method comp_method;
-  int machr;
-  enum rdma_rma_opcodes rma_op;
+
   RDMAOptions();
 };
 
