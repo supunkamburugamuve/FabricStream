@@ -12,7 +12,7 @@
 
 class RDMAServer {
   public:
-    RDMAServer(RDMAOptions *opts);
+	RDMAServer(RDMAOptions *opts, struct fi_info *hints) ;
     void StartServer();
     // free all the resources
     void ShutDown();

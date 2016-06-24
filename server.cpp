@@ -14,7 +14,7 @@
 /**
  * Initialize the server with options
  */
-RDMAServer::RDMAServer(RDMAOptions *opts) {
+RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	char *node, *service;
 	uint64_t flags = 0;
 
