@@ -35,4 +35,10 @@ public:
   RDMAOptions();
 };
 
+/**
+ * Given the options, create node, service, hints and flags
+ */
+int rdma_utils_read_addr_opts(char **node, char **service, struct fi_info *hints,
+		uint64_t *flags, RDMAOptions *opts);
+
 #endif
