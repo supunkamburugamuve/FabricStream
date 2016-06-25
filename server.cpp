@@ -23,9 +23,6 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 
 	// allocate the hints
 	this->info_hints = fi_allocinfo();
-	if (!info_hints) {
-		err = true;
-	}
 
 	// read the parameters from the options
 	rdma_utils_read_addr_opts(&node, &service, this->info_hints, &flags, opts);
