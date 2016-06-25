@@ -1,6 +1,8 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstdio>
+# include <cstring>
+
 #include "utils.h"
 #include "server.h"
 
@@ -12,7 +14,7 @@ void rdma_parseinfo(int op, char *optarg, struct fi_info *hints) {
 	switch (op) {
 	case 'n':
 		if (!hints->domain_attr) {
-			hints->domain_attr = malloc(sizeof *(hints->domain_attr));
+			hints->domain_attr = (struct fi_domain_attr	*)malloc(sizeof *(hints->domain_attr));
 			if (!hints->domain_attr) {
 				exit(EXIT_FAILURE);
 			}
