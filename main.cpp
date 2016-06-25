@@ -23,7 +23,7 @@ void rdma_parseinfo(int op, char *optarg, struct fi_info *hints) {
 		break;
 	case 'f':
 		if (!hints->fabric_attr) {
-			hints->fabric_attr = malloc(sizeof *(hints->fabric_attr));
+			hints->fabric_attr = (struct fi_fabric_attr	*	)malloc(sizeof *(hints->fabric_attr));
 			if (!hints->fabric_attr) {
 				exit(EXIT_FAILURE);
 			}

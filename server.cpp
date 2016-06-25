@@ -18,7 +18,6 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	char *node, *service;
 	uint64_t flags = 0;
 
-	bool err;
     char *fi_str;
 	this->options = opts;
 
