@@ -11,6 +11,28 @@
 #include "rdma_fabric.h"
 #include "server.h"
 #include "utils.h"
+
+int RDMAServer::OpenFabric(void) {
+	int ret;
+
+	ret = fi_fabric(this->info->fabric_attr, &this->fabric, NULL);
+	if (ret) {
+		return ret;
+	}
+
+	ret = fi_eq_open(fabric, &eq_attr, &eq, NULL);
+	if (ret) {
+		return ret;
+	}
+
+	ret = fi_domain(fabric, this->info, &domain, NULL);
+	if (ret) {
+		return ret;
+	}
+
+	return 0;
+}
+
 /**
  * Initialize the server with options
  */
@@ -24,6 +46,9 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 
 	// allocate the hints
 	this->info_hints = fi_allocinfo();
+
+	// initialize this attribute, search weather this is correct
+	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
 
 	// read the parameters from the options
 	rdma_utils_read_addr_opts(&node, &service, this->info_hints, &flags, opts);
@@ -47,8 +72,7 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 		// throw exception, we cannot proceed
 	}
 
-
-
+	OpenFabric();
 }
 
 void RDMAServer::StartServer() {
@@ -56,3 +80,4 @@ void RDMAServer::StartServer() {
 		fi_freeinfo(this->info_hints);
 	}
 }
+
