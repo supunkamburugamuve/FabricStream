@@ -15,6 +15,8 @@
 
 int RDMAServer::OpenFabric(void) {
 	int ret;
+	char *name = "hello";
+	this->info->fabric_attr->name = name;
 	printf("Fabric name: %s, Prov Name %s\n", this->info->fabric_attr->name, this->info->fabric_attr->prov_name);
 	ret = fi_fabric(this->info->fabric_attr, &this->fabric, NULL);
 	if (ret) {
