@@ -29,12 +29,15 @@ void rdma_parseinfo(int op, char *optarg, struct fi_info *hints) {
 		hints->fabric_attr->prov_name = strdup(optarg);
 		break;
 	case 'e':
-		if (!strncasecmp("msg", optarg, 3))
+		if (!strncasecmp("msg", optarg, 3)) {
 			hints->ep_attr->type = FI_EP_MSG;
-		if (!strncasecmp("rdm", optarg, 3))
+		}
+		if (!strncasecmp("rdm", optarg, 3)) {
 			hints->ep_attr->type = FI_EP_RDM;
-		if (!strncasecmp("dgram", optarg, 5))
+		}
+		if (!strncasecmp("dgram", optarg, 5)) {
 			hints->ep_attr->type = FI_EP_DGRAM;
+		}
 		break;
 	default:
 		break;
