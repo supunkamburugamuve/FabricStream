@@ -20,12 +20,12 @@ int RDMAServer::OpenFabric(void) {
 		return ret;
 	}
 
-	ret = fi_eq_open(fabric, &eq_attr, &eq, NULL);
+	ret = fi_eq_open(this->fabric, &this->eq_attr, &this->eq, NULL);
 	if (ret) {
 		return ret;
 	}
 
-	ret = fi_domain(fabric, this->info, &domain, NULL);
+	ret = fi_domain(this->fabric, this->info, &this->domain, NULL);
 	if (ret) {
 		return ret;
 	}
