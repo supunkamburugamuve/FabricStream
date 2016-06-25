@@ -11,3 +11,5 @@ server.o: utils.cpp server.cpp
 	${CC} ${CFLAGS} $(INC) -c utils.cpp server.cpp	
 utils.o: utils.cpp
 	${CC} $(CFLAGS) $(INC) -c utils.cpp
+clean:
+	rm *.o main

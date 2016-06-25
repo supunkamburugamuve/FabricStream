@@ -28,7 +28,7 @@ class RDMAServer {
     struct fid_eq *eq;
     struct fid_domain *domain;
 
-    int RDMAServer::OpenFabric(void);
+    int OpenFabric(void);
 };
 
 #endif
