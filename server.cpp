@@ -17,16 +17,19 @@ int RDMAServer::OpenFabric(void) {
 
 	ret = fi_fabric(this->info->fabric_attr, &this->fabric, NULL);
 	if (ret) {
+		std::cout << "Failed to create fabric" << std::endl;
 		return ret;
 	}
 
 	ret = fi_eq_open(this->fabric, &this->eq_attr, &this->eq, NULL);
 	if (ret) {
+		std::cout << "Failed to open eq" << std::endl;
 		return ret;
 	}
 
 	ret = fi_domain(this->fabric, this->info, &this->domain, NULL);
 	if (ret) {
+		std::cout << "Failed to create domain" << std::endl;
 		return ret;
 	}
 
