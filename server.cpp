@@ -45,7 +45,7 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 		// throw exception, we cannot proceed
 	}
 
-	// now lets incorporate the options
+
 
 }
 

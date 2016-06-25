@@ -8,7 +8,7 @@ using namespace std;
 
 #define FT_PRINT_OPTS_USAGE(opt, desc) fprintf(stderr, " %-20s %s\n", opt, desc);
 
-void ft_parseinfo(int op, char *optarg, struct fi_info *hints) {
+void rdma_parseinfo(int op, char *optarg, struct fi_info *hints) {
 	switch (op) {
 	case 'n':
 		if (!hints->domain_attr) {
@@ -41,7 +41,7 @@ void ft_parseinfo(int op, char *optarg, struct fi_info *hints) {
 	}
 }
 
-void ft_parse_addr_opts(int op, char *optarg, RDMAOptions *opts) {
+void rdma_parse_addr_opts(int op, char *optarg, RDMAOptions *opts) {
 	switch (op) {
 	case 's':
 		opts->src_addr = optarg;
@@ -66,8 +66,8 @@ int main(int argc, char **argv) {
     while ((op = getopt(argc, argv, "ho:" ADDR_OPTS INFO_OPTS)) != -1) {
 		switch (op) {
 		default:
-			ft_parseinfo(op, optarg, hints);
-			ft_parse_addr_opts(op, optarg, &options);
+			rdma_parseinfo(op, optarg, hints);
+			rdma_parse_addr_opts(op, optarg, &options);
 			break;
 		case '?':
 		case 'h':
@@ -75,6 +75,10 @@ int main(int argc, char **argv) {
 			return 0;
 		}
 	}
+
+    hints->ep_attr->type = FI_EP_RDM;
+	hints->caps = FI_MSG | FI_RMA;
+	hints->mode = FI_CONTEXT | FI_LOCAL_MR | FI_RX_CQ_DATA;
 
     RDMAServer server(&options, hints);
 
