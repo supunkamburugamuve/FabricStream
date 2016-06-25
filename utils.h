@@ -12,7 +12,7 @@
 #include <rdma/fi_errno.h>
 
 #define ADDR_OPTS "b:p:s:a:"
-#define INFO_OPTS "n:f:e:"
+#define INFO_OPTS "n:f:e:r:"
 
 enum rdma_comp_method {
 	FT_COMP_SPIN = 0,
