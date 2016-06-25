@@ -15,6 +15,7 @@
  * Initialize the server with options
  */
 RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
+	int ret;
 	char *node, *service;
 	uint64_t flags = 0;
 
@@ -27,9 +28,14 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	// read the parameters from the options
 	rdma_utils_read_addr_opts(&node, &service, this->info_hints, &flags, opts);
 
+	// default to RDM
+	if (!hints->ep_attr->type) {
+		hints->ep_attr->type = FI_EP_RDM;
+	}
+
 	// now lets retrieve the available network services
 	// according to hints
-	fi_getinfo(RDMA_FIVERSION, node, service, flags, info_hints, &this->info);
+	ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, info_hints, &this->info);
 	if (this->info) {
 		fi_info *next = this->info;
 		while (next) {
