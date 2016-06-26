@@ -52,6 +52,51 @@ int RDMACLient::OpenFabric(void) {
 	return 0;
 }
 
+int RDMACLient::ClientConnect(void) {
+	struct fi_eq_cm_entry entry;
+	uint32_t event;
+	ssize_t rd;
+	int ret;
+
+	ret = ft_getinfo(hints, &fi);
+	if (ret)
+		return ret;
+
+	ret = ft_open_fabric_res();
+	if (ret)
+		return ret;
+
+	ret = ft_alloc_active_res(fi);
+	if (ret)
+		return ret;
+
+	ret = ft_init_ep();
+	if (ret)
+		return ret;
+
+	ret = fi_connect(this->ep, this->info->dest_addr, NULL, 0);
+	if (ret) {
+		printf("fi_connect %d\n", ret);
+		return ret;
+	}
+
+	rd = fi_eq_sread(eq, &event, &entry, sizeof entry, -1, 0);
+	if (rd != sizeof entry) {
+		printf("fi_eq_sread", "connect");
+		ret = (int) rd;
+		return ret;
+	}
+
+	if (event != FI_CONNECTED || entry.fid != &ep->fid) {
+		fprintf(stderr, "Unexpected CM event %d fid %p (ep %p)\n",
+			event, entry.fid, ep);
+		ret = -FI_EOTHER;
+		return ret;
+	}
+
+	return 0;
+}
+
 RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 	int ret;
 	char *node, *service;

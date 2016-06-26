@@ -21,6 +21,8 @@ private:
   struct fid_eq *eq;
   // fabric domain we are working with
   struct fid_domain *domain;
+  // end point
+  struct fid_ep *ep, *alias_ep;
 
   /**
    * Private methods

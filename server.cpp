@@ -56,19 +56,25 @@ int RDMAServer::OpenFabric(void) {
 int RDMAServer::StartServer(void) {
 	int ret;
 
-	ret = fi_eq_open(this->fabric, &this->eq_attr, &this->eq, NULL);
+	ret = fi_fabric(this->pep_info->fabric_attr, &fabric, NULL);
+	if (ret) {
+		printf("fi_fabric %d\n", ret);
+		return ret;
+	}
+
+	ret = fi_eq_open(this->fabric, &eq_attr, &eq, NULL);
 	if (ret) {
 		printf("fi_eq_open %d\n", ret);
 		return ret;
 	}
 
-	ret = fi_passive_ep(this->fabric, this->info_hints, &this->pep, NULL);
+	ret = fi_passive_ep(this->fabric, this->pep_info, &pep, NULL);
 	if (ret) {
 		printf("fi_passive_ep %d\n", ret);
 		return ret;
 	}
 
-	ret = fi_pep_bind(pep, &eq->fid, 0);
+	ret = fi_pep_bind(this->pep, &eq->fid, 0);
 	if (ret) {
 		printf("fi_pep_bind %d\n", ret);
 		return ret;
@@ -83,27 +89,66 @@ int RDMAServer::StartServer(void) {
 	return 0;
 }
 
+
 int RDMAServer::ServerConnect(void) {
 	struct fi_eq_cm_entry entry;
 	uint32_t event;
 	ssize_t rd;
 	int ret;
 
-	rd = fi_eq_sread(this->eq, &event, &entry, sizeof entry, -1, 0);
+	rd = fi_eq_sread(eq, &event, &entry, sizeof entry, -1, 0);
 	if (rd != sizeof entry) {
-		printf("failed to read incoming connection %d\n", rd);
+		printf("fi_eq_sread listen\n");
 		return (int) rd;
 	}
 
+	this->info = entry.info;
 	if (event != FI_CONNREQ) {
 		fprintf(stderr, "Unexpected CM event %d\n", event);
 		ret = -FI_EOTHER;
 		goto err;
 	}
 
-	printf("Connect request received\n");
+	ret = fi_domain(this->fabric, this->info, &this->domain, NULL);
+	if (ret) {
+		printf("fi_domain %d\n", ret);
+		goto err;
+	}
+
+	ret = rdma_alloc_active_res(fi);
+	if (ret) {
+		goto err;
+	}
+
+	ret = rdma_init_ep();
+	if (ret) {
+		goto err;
+	}
+
+	ret = fi_accept(ep, NULL, 0);
+	if (ret) {
+		printf("fi_accept %d\n", ret);
+		goto err;
+	}
+
+	rd = fi_eq_sread(eq, &event, &entry, sizeof entry, -1, 0);
+	if (rd != sizeof entry) {
+		printf("fi_eq_sread accept %d\n");
+		ret = (int) rd;
+		goto err;
+	}
+
+	if (event != FI_CONNECTED || entry.fid != &ep->fid) {
+		fprintf(stderr, "Unexpected CM event %d fid %p (ep %p)\n",
+			event, entry.fid, ep);
+		ret = -FI_EOTHER;
+		goto err;
+	}
 
 	return 0;
+err:
+	fi_reject(pep, info->handle, NULL, 0);
+	return ret;
 }
 
 /**
