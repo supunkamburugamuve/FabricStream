@@ -84,10 +84,12 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 
 	// now lets retrieve the available network services
 	// according to hints
-	ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, info_hints, &this->info);
+	ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, this->info_hints, &this->info);
 	if (this->info) {
 		fi_info *next = this->info;
 		while (next) {
+			fi_fabric_attr *attr = next->fabric_attr;
+			printf("fabric attr name=%s prov_name=%s\n", attr->name, attr->prov_name);
 			fi_str = fi_tostr(next, FI_TYPE_INFO);
             std::cout << "FI" << fi_str << std::endl;
             next = next->next;
