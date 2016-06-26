@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <cstdio>
 
 #include <rdma/fabric.h>
 #include <rdma/fi_domain.h>
@@ -48,6 +49,8 @@ static int rdm_utils_getaddr(char *node, char *service,
 		}
 		return 0;
 	}
+
+	printf("Get info with options node=%s service=%s flags=%d\n", node, service, flags);
 
 	ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, hints, &fi);
 	if (ret) {

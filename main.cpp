@@ -28,7 +28,7 @@ void rdma_parseinfo(int op, char *optarg, struct fi_info *hints) {
 				exit(EXIT_FAILURE);
 			}
 		}
-		printf("prov_name: %s", optarg);
+		printf("prov_name: %s\n", optarg);
 		hints->fabric_attr->prov_name = strdup(optarg);
 		break;
 	case 'r':
@@ -38,7 +38,7 @@ void rdma_parseinfo(int op, char *optarg, struct fi_info *hints) {
 				exit(EXIT_FAILURE);
 			}
 		}
-		printf("name: %s", optarg);
+		printf("name: %s\n", optarg);
 		hints->fabric_attr->name = strdup(optarg);
 		break;
 	case 'e':
