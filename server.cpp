@@ -14,6 +14,7 @@
 #include "utils.h"
 
 int RDMAServer::OpenFabric(void) {
+	fi_info *f;
 	int ret;
 	char *name = "IB-0x80fe";
 	this->info->fabric_attr->name = this->options->fname;
@@ -30,11 +31,23 @@ int RDMAServer::OpenFabric(void) {
 		return ret;
 	}
 	std::cout << "Opened eq:" << std::endl;
-	ret = fi_domain(this->fabric, this->info, &this->domain, NULL);
-	if (ret) {
-		std::cout << "Failed to create domain" << ret << std::endl;
-		return ret;
+
+	for (f = this->info; f; f = f->next) {
+		ret = fi_domain(this->fabric, this->info, &this->domain, NULL);
+		if (ret) {
+		  printf("Could not init domain using provider %s: %s",
+			   f->fabric_attr->prov_name,
+			   fi_strerror(-ret));
+		}
+		else {
+		  printf("Created FI domain on %s : %s : %s",
+			   f->fabric_attr->prov_name,
+			   f->fabric_attr->name,
+			   fi_tostr(&f->ep_attr->type, FI_TYPE_EP_TYPE));
+		  break;
+		}
 	}
+
 	std::cout << "Opened domain:" << std::endl;
 	return 0;
 }
