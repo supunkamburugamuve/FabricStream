@@ -21,8 +21,12 @@ class RDMAServer {
     struct fi_info *info;
     // hints to be used to obtain fabric information
     struct fi_info *info_hints;
+    // passive endpoint information
+    // passive endpoint is used for connection management
+    struct fi_info *pep_info;
     // the fabric
     struct fid_fabric *fabric;
+    // event queue attribute
     struct fi_eq_attr eq_attr;
     // the event queue to listen on
     struct fid_eq *eq;
