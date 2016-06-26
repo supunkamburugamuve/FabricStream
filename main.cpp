@@ -28,17 +28,19 @@ void rdma_parseinfo(int op, char *optarg, struct fi_info *hints) {
 				exit(EXIT_FAILURE);
 			}
 		}
+		printf("prov_name: %s", optarg);
 		hints->fabric_attr->prov_name = strdup(optarg);
 		break;
 	case 'r':
+		if (!hints->fabric_attr) {
+			hints->fabric_attr = (struct fi_fabric_attr	*	)malloc(sizeof *(hints->fabric_attr));
 			if (!hints->fabric_attr) {
-				hints->fabric_attr = (struct fi_fabric_attr	*	)malloc(sizeof *(hints->fabric_attr));
-				if (!hints->fabric_attr) {
-					exit(EXIT_FAILURE);
-				}
+				exit(EXIT_FAILURE);
 			}
-			hints->fabric_attr->name = strdup(optarg);
-			break;
+		}
+		printf("name: %s", optarg);
+		hints->fabric_attr->name = strdup(optarg);
+		break;
 	case 'e':
 		if (!strncasecmp("msg", optarg, 3)) {
 			hints->ep_attr->type = FI_EP_MSG;
