@@ -24,6 +24,7 @@ int RDMAServer::OpenFabric(void) {
 		std::cout << "Failed to create fabric:" << ret << std::endl;
 		return ret;
 	}
+
 	std::cout << "Opened fabric:" << std::endl;
 	ret = fi_eq_open(this->fabric, &this->eq_attr, &this->eq, NULL);
 	if (ret) {
@@ -82,106 +83,6 @@ int RDMAServer::StartServer(void) {
 	return 0;
 }
 
-int ft_set_rma_caps(struct fi_info *fi, enum ft_rma_opcodes rma_op) {
-	switch (rma_op) {
-	case FT_RMA_READ:
-		fi->caps |= FI_REMOTE_READ;
-		if (fi->mode & FI_LOCAL_MR)
-			fi->caps |= FI_READ;
-		break;
-	case FT_RMA_WRITE:
-	case FT_RMA_WRITEDATA:
-		fi->caps |= FI_REMOTE_WRITE;
-		if (fi->mode & FI_LOCAL_MR)
-			fi->caps |= FI_WRITE;
-		break;
-	default:
-		FT_ERR("Invalid rma op type\n");
-		return -FI_EINVAL;
-	}
-	return 0;
-}
-
-int RDMAServer::AllocateReceive(struct fi_info *fi) {
-	int ret;
-	if (this->info_hints->caps & FI_RMA) {
-		ret = ft_set_rma_caps(fi, opts.rma_op);
-		if (ret)
-			return ret;
-	}
-
-	ret = ft_alloc_msgs();
-	if (ret)
-		return ret;
-
-	if (cq_attr.format == FI_CQ_FORMAT_UNSPEC) {
-		if (fi->caps & FI_TAGGED)
-			cq_attr.format = FI_CQ_FORMAT_TAGGED;
-		else
-			cq_attr.format = FI_CQ_FORMAT_CONTEXT;
-	}
-
-	if (opts.options & FT_OPT_TX_CQ) {
-		ft_cq_set_wait_attr();
-		cq_attr.size = fi->tx_attr->size;
-		ret = fi_cq_open(domain, &cq_attr, &txcq, &txcq);
-		if (ret) {
-			FT_PRINTERR("fi_cq_open", ret);
-			return ret;
-		}
-	}
-
-	if (opts.options & FT_OPT_TX_CNTR) {
-		ft_cntr_set_wait_attr();
-		ret = fi_cntr_open(domain, &cntr_attr, &txcntr, &txcntr);
-		if (ret) {
-			FT_PRINTERR("fi_cntr_open", ret);
-			return ret;
-		}
-	}
-
-	if (opts.options & FT_OPT_RX_CQ) {
-		ft_cq_set_wait_attr();
-		cq_attr.size = fi->rx_attr->size;
-		ret = fi_cq_open(domain, &cq_attr, &rxcq, &rxcq);
-		if (ret) {
-			FT_PRINTERR("fi_cq_open", ret);
-			return ret;
-		}
-	}
-
-	if (opts.options & FT_OPT_RX_CNTR) {
-		ft_cntr_set_wait_attr();
-		ret = fi_cntr_open(domain, &cntr_attr, &rxcntr, &rxcntr);
-		if (ret) {
-			FT_PRINTERR("fi_cntr_open", ret);
-			return ret;
-		}
-	}
-
-	if (fi->ep_attr->type == FI_EP_RDM || fi->ep_attr->type == FI_EP_DGRAM) {
-		if (fi->domain_attr->av_type != FI_AV_UNSPEC)
-			av_attr.type = fi->domain_attr->av_type;
-
-		if (opts.av_name) {
-			av_attr.name = opts.av_name;
-		}
-		ret = fi_av_open(domain, &av_attr, &av, NULL);
-		if (ret) {
-			FT_PRINTERR("fi_av_open", ret);
-			return ret;
-		}
-	}
-
-	ret = fi_endpoint(domain, fi, &ep, NULL);
-	if (ret) {
-		FT_PRINTERR("fi_endpoint", ret);
-		return ret;
-	}
-
-	return 0;
-}
-
 int RDMAServer::ServerConnect(void) {
 	struct fi_eq_cm_entry entry;
 	uint32_t event;
@@ -190,52 +91,20 @@ int RDMAServer::ServerConnect(void) {
 
 	rd = fi_eq_sread(this->eq, &event, &entry, sizeof entry, -1, 0);
 	if (rd != sizeof entry) {
-		FT_PROCESS_EQ_ERR(rd, eq, "fi_eq_sread", "listen");
+		printf("failed to read incoming connection %d\n", rd);
 		return (int) rd;
 	}
 
-	fi = entry.info;
 	if (event != FI_CONNREQ) {
 		fprintf(stderr, "Unexpected CM event %d\n", event);
 		ret = -FI_EOTHER;
 		goto err;
 	}
 
-	ret = ft_alloc_active_res(fi);
-	if (ret)
-		goto err;
-
-	ret = ft_init_ep();
-	if (ret)
-		goto err;
-
-	ret = fi_accept(ep, NULL, 0);
-	if (ret) {
-		FT_PRINTERR("fi_accept", ret);
-		goto err;
-	}
-
-	rd = fi_eq_sread(eq, &event, &entry, sizeof entry, -1, 0);
-	if (rd != sizeof entry) {
-		FT_PROCESS_EQ_ERR(rd, eq, "fi_eq_sread", "accept");
-		ret = (int) rd;
-		goto err;
-	}
-
-	if (event != FI_CONNECTED || entry.fid != &ep->fid) {
-		fprintf(stderr, "Unexpected CM event %d fid %p (ep %p)\n",
-			event, entry.fid, ep);
-		ret = -FI_EOTHER;
-		goto err;
-	}
+	printf("Connect request received\n");
 
 	return 0;
-
-err:
-	fi_reject(pep, fi->handle, NULL, 0);
-	return ret;
 }
-
 
 /**
  * Initialize the server with options
