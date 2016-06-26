@@ -11,8 +11,8 @@
 #include <rdma/fi_rma.h>
 #include <rdma/fi_errno.h>
 
-#define ADDR_OPTS "b:p:s:a:"
-#define INFO_OPTS "n:f:e:r:"
+#define ADDR_OPTS "b:p:s:a:r:"
+#define INFO_OPTS "n:f:e:"
 
 enum rdma_comp_method {
 	FT_COMP_SPIN = 0,
@@ -34,7 +34,7 @@ public:
   char *dst_port;
   char *src_addr;
   char *dst_addr;
-
+  char *fname;
   RDMAOptions();
 };
 
