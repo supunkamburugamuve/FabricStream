@@ -64,7 +64,7 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	this->options = opts;
 
 	// allocate the hints
-	this->info_hints = fi_allocinfo();
+	this->info_hints = hints;
 
 	// initialize this attribute, search weather this is correct
 	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
@@ -76,6 +76,11 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	if (!hints->ep_attr->type) {
 		hints->ep_attr->type = FI_EP_RDM;
 	}
+
+	this->info_hints->domain_attr->mr_mode = FI_MR_BASIC;
+	this->info_hints->ep_attr->type = FI_EP_RDM;
+	this->info_hints->caps = FI_MSG | FI_RMA | FI_RMA_EVENT;
+	this->info_hints->mode = FI_CONTEXT | FI_LOCAL_MR | FI_RX_CQ_DATA;
 
 	// now lets retrieve the available network services
 	// according to hints
