@@ -5,6 +5,7 @@
 
 #include "utils.h"
 #include "server.h"
+#include "client.h"
 
 using namespace std;
 
@@ -91,6 +92,6 @@ int main(int argc, char **argv) {
 	hints->mode = FI_CONTEXT | FI_LOCAL_MR | FI_RX_CQ_DATA;
 
     RDMAServer server(&options, hints);
-
+    RDMACLient client(&options, hints);
     return 0;
 }
