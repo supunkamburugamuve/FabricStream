@@ -79,6 +79,7 @@ public:
  */
 int rdma_utils_read_addr_opts(char **node, char **service, struct fi_info *hints,
 		uint64_t *flags, RDMAOptions *opts);
+int rdma_utils_set_rma_caps(struct fi_info *fi);
 int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_info **info);
 static void rdma_utils_cq_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cq_attr *cq_attr);
 static void rdma_utils_cntr_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cntr_attr *cntr_attr);

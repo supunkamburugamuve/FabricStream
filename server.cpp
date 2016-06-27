@@ -319,7 +319,7 @@ int RDMAServer::ServerConnect(void) {
 
 	rd = fi_eq_sread(eq, &event, &entry, sizeof entry, -1, 0);
 	if (rd != sizeof entry) {
-		printf("fi_eq_sread accept %d\n");
+		printf("fi_eq_sread accept %d\n", rd);
 		ret = (int) rd;
 		goto err;
 	}
