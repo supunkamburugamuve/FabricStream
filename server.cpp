@@ -56,31 +56,42 @@ int RDMAServer::OpenFabric(void) {
 int RDMAServer::StartServer(void) {
 	int ret;
 
-	ret = fi_fabric(this->pep_info->fabric_attr, &fabric, NULL);
+	// info for passive end-point
+	ret = rdma_utils_get_info(this->options, this->info_hints, &this->info_pep);
+	if (ret) {
+		return ret;
+	}
+
+	// create the fabric for passive end-point
+	ret = fi_fabric(this->info_pep->fabric_attr, &fabric, NULL);
 	if (ret) {
 		printf("fi_fabric %d\n", ret);
 		return ret;
 	}
 
-	ret = fi_eq_open(this->fabric, &eq_attr, &eq, NULL);
+	// open the event queue for passive end-point
+	ret = fi_eq_open(this->fabric, &this->eq_attr, &this->eq, NULL);
 	if (ret) {
 		printf("fi_eq_open %d\n", ret);
 		return ret;
 	}
 
-	ret = fi_passive_ep(this->fabric, this->pep_info, &pep, NULL);
+	// allocates a passive end-point
+	ret = fi_passive_ep(this->fabric, this->info_pep, &this->pep, NULL);
 	if (ret) {
 		printf("fi_passive_ep %d\n", ret);
 		return ret;
 	}
 
+	// bind the passive end-point to event queue
 	ret = fi_pep_bind(this->pep, &eq->fid, 0);
 	if (ret) {
 		printf("fi_pep_bind %d\n", ret);
 		return ret;
 	}
 
-	ret = fi_listen(pep);
+	// listen for incoming connections
+	ret = fi_listen(this->pep);
 	if (ret) {
 		printf("fi_listen %d\n", ret);
 		return ret;
@@ -96,12 +107,14 @@ int RDMAServer::ServerConnect(void) {
 	ssize_t rd;
 	int ret;
 
+	// read the events for incoming messages
 	rd = fi_eq_sread(eq, &event, &entry, sizeof entry, -1, 0);
 	if (rd != sizeof entry) {
 		printf("fi_eq_sread listen\n");
 		return (int) rd;
 	}
 
+	// this is the correct fi_info associated with active endpoint
 	this->info = entry.info;
 	if (event != FI_CONNREQ) {
 		fprintf(stderr, "Unexpected CM event %d\n", event);
@@ -155,10 +168,6 @@ err:
  * Initialize the server with options
  */
 RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
-	int ret;
-	char *node, *service;
-	uint64_t flags = 0;
-
     char *fi_str;
 	this->options = opts;
 
@@ -168,35 +177,12 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	// initialize this attribute, search weather this is correct
 	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
 
-	// read the parameters from the options
-	rdma_utils_read_addr_opts(&node, &service, this->info_hints, &flags, opts);
+	// get the information
+	rdma_utils_get_info(this->options, hints, &this->info);
 
-	// default to RDM
-	if (!hints->ep_attr->type) {
-		hints->ep_attr->type = FI_EP_RDM;
-	}
+	this->cq_attr.wait_obj = FI_WAIT_NONE;
 
-	this->info_hints->domain_attr->mr_mode = FI_MR_BASIC;
-	this->info_hints->ep_attr->type = FI_EP_RDM;
-	this->info_hints->caps = FI_MSG | FI_RMA | FI_RMA_EVENT;
-	this->info_hints->mode = FI_CONTEXT | FI_LOCAL_MR | FI_RX_CQ_DATA;
-
-	// now lets retrieve the available network services
-	// according to hints
-	ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, this->info_hints, &this->info);
-	if (this->info) {
-		fi_info *next = this->info;
-		while (next) {
-			fi_fabric_attr *attr = next->fabric_attr;
-			printf("fabric attr name=%s prov_name=%s\n", attr->name, attr->prov_name);
-			fi_str = fi_tostr(next, FI_TYPE_INFO);
-            std::cout << "FI" << fi_str << std::endl;
-            next = next->next;
-		}
-	} else {
-		// throw exception, we cannot proceed
-	}
-
+	// now open fabric
 	OpenFabric();
 }
 

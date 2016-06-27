@@ -23,7 +23,7 @@ class RDMAServer {
     struct fi_info *info_hints;
     // passive endpoint information
     // passive endpoint is used for connection management
-    struct fi_info *pep_info;
+    struct fi_info *info_pep;
     // the fabric
     struct fid_fabric *fabric;
     // event queue attribute
@@ -37,12 +37,14 @@ class RDMAServer {
     // end point
     struct fid_ep *ep, *alias_ep;
 
+    struct fi_cq_attr cq_attr;
     /**
      * Private methods
      */
     int AllocateReceive(struct fi_info *fi);
     int OpenFabric(void);
     int ServerConnect(void);
+    int GetInfo( struct fi_info *hints, struct fi_info **info);
 };
 
 #endif
