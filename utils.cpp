@@ -21,6 +21,8 @@ RDMAOptions::RDMAOptions() {
 	this->dst_port = NULL;
 	this->src_addr = NULL;
 	this->src_port = NULL;
+	this->av_name = NULL;
+	this->options = -1;
 }
 
 int rdma_utils_set_rma_caps(struct fi_info *fi) {
@@ -34,85 +36,43 @@ int rdma_utils_set_rma_caps(struct fi_info *fi) {
 	return 0;
 }
 
-int rdma_utils_alloc_active_res(struct fi_info *fi, struct fi_info *hints) {
-	int ret;
 
-	if (hints->caps & FI_RMA) {
-		ret = rdma_utils_set_rma_caps(fi);
-		if (ret)
-			return ret;
+static void rdma_utils_cq_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cq_attr *cq_attr) {
+	switch (opts->comp_method) {
+	case FT_COMP_SREAD:
+		cq_attr->wait_obj = FI_WAIT_UNSPEC;
+		cq_attr->wait_cond = FI_CQ_COND_NONE;
+		break;
+	case FT_COMP_WAITSET:
+		cq_attr->wait_obj = FI_WAIT_SET;
+		cq_attr->wait_cond = FI_CQ_COND_NONE;
+		cq_attr->wait_set = waitset;
+		break;
+	case FT_COMP_WAIT_FD:
+		cq_attr->wait_obj = FI_WAIT_FD;
+		cq_attr->wait_cond = FI_CQ_COND_NONE;
+		break;
+	default:
+		cq_attr->wait_obj = FI_WAIT_NONE;
+		break;
 	}
+}
 
-	ret = ft_alloc_msgs();
-	if (ret)
-		return ret;
-
-	if (cq_attr.format == FI_CQ_FORMAT_UNSPEC) {
-		if (fi->caps & FI_TAGGED)
-			cq_attr.format = FI_CQ_FORMAT_TAGGED;
-		else
-			cq_attr.format = FI_CQ_FORMAT_CONTEXT;
+static void rdma_utils_cntr_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cntr_attr *cntr_attr) {
+	switch (opts->comp_method) {
+	case FT_COMP_SREAD:
+		cntr_attr->wait_obj = FI_WAIT_UNSPEC;
+		break;
+	case FT_COMP_WAITSET:
+		cntr_attr->wait_obj = FI_WAIT_SET;
+		break;
+	case FT_COMP_WAIT_FD:
+		cntr_attr->wait_obj = FI_WAIT_FD;
+		break;
+	default:
+		cntr_attr->wait_obj = FI_WAIT_NONE;
+		break;
 	}
-
-	if (opts.options & FT_OPT_TX_CQ) {
-		ft_cq_set_wait_attr();
-		cq_attr.size = fi->tx_attr->size;
-		ret = fi_cq_open(domain, &cq_attr, &txcq, &txcq);
-		if (ret) {
-			FT_PRINTERR("fi_cq_open", ret);
-			return ret;
-		}
-	}
-
-	if (opts.options & FT_OPT_TX_CNTR) {
-		ft_cntr_set_wait_attr();
-		ret = fi_cntr_open(domain, &cntr_attr, &txcntr, &txcntr);
-		if (ret) {
-			FT_PRINTERR("fi_cntr_open", ret);
-			return ret;
-		}
-	}
-
-	if (opts.options & FT_OPT_RX_CQ) {
-		ft_cq_set_wait_attr();
-		cq_attr.size = fi->rx_attr->size;
-		ret = fi_cq_open(domain, &cq_attr, &rxcq, &rxcq);
-		if (ret) {
-			FT_PRINTERR("fi_cq_open", ret);
-			return ret;
-		}
-	}
-
-	if (opts.options & FT_OPT_RX_CNTR) {
-		ft_cntr_set_wait_attr();
-		ret = fi_cntr_open(domain, &cntr_attr, &rxcntr, &rxcntr);
-		if (ret) {
-			FT_PRINTERR("fi_cntr_open", ret);
-			return ret;
-		}
-	}
-
-	if (fi->ep_attr->type == FI_EP_RDM || fi->ep_attr->type == FI_EP_DGRAM) {
-		if (fi->domain_attr->av_type != FI_AV_UNSPEC)
-			av_attr.type = fi->domain_attr->av_type;
-
-		if (opts.av_name) {
-			av_attr.name = opts.av_name;
-		}
-		ret = fi_av_open(domain, &av_attr, &av, NULL);
-		if (ret) {
-			FT_PRINTERR("fi_av_open", ret);
-			return ret;
-		}
-	}
-
-	ret = fi_endpoint(domain, fi, &ep, NULL);
-	if (ret) {
-		FT_PRINTERR("fi_endpoint", ret);
-		return ret;
-	}
-
-	return 0;
 }
 
 static int rdma_utils_dupaddr(void **dst_addr, size_t *dst_addrlen,

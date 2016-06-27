@@ -27,6 +27,19 @@ enum rdma_rma_opcodes {
 	FT_RMA_WRITEDATA,
 };
 
+enum {
+	FT_OPT_ACTIVE		= 1 << 0,
+	FT_OPT_ITER		= 1 << 1,
+	FT_OPT_SIZE		= 1 << 2,
+	FT_OPT_RX_CQ		= 1 << 3,
+	FT_OPT_TX_CQ		= 1 << 4,
+	FT_OPT_RX_CNTR		= 1 << 5,
+	FT_OPT_TX_CNTR		= 1 << 6,
+	FT_OPT_VERIFY_DATA	= 1 << 7,
+	FT_OPT_ALIGN		= 1 << 8,
+	FT_OPT_BW		= 1 << 9,
+};
+
 
 class RDMAOptions {
 public:
@@ -35,8 +48,31 @@ public:
   char *src_addr;
   char *dst_addr;
   char *fname;
+  int options;
+  char *av_name;
+  /**
+   * Computation method, spin, wait or wait-set
+   */
+  enum rdma_comp_method comp_method;
+
   RDMAOptions();
 };
+
+#define FT_EP_BIND(ep, fd, flags)					\
+	do {								\
+		int ret;						\
+		if ((fd)) {						\
+			ret = fi_ep_bind((ep), &(fd)->fid, (flags));	\
+			if (ret) {					\
+				printf("fi_ep_bind %d\n", ret);		\
+				return ret;				\
+			}						\
+		}							\
+	} while (0)
+
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
+#define FT_MAX_CTRL_MSG 64
 
 /**
  * Given the options, create node, service, hints and flags
@@ -44,5 +80,7 @@ public:
 int rdma_utils_read_addr_opts(char **node, char **service, struct fi_info *hints,
 		uint64_t *flags, RDMAOptions *opts);
 int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_info **info);
+static void rdma_utils_cq_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cq_attr *cq_attr);
+static void rdma_utils_cntr_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cntr_attr *cntr_attr);
 
 #endif

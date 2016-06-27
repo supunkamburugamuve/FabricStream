@@ -53,6 +53,114 @@ int RDMAServer::OpenFabric(void) {
 	return 0;
 }
 
+int timeout = 0;
+
+#define FT_POST(post_fn, comp_fn, seq, op_str, ...)				\
+	do {									\
+		int timeout_save;						\
+		int ret, rc;							\
+										\
+		while (1) {							\
+			ret = post_fn(__VA_ARGS__);				\
+			if (!ret)						\
+				break;						\
+										\
+			if (ret != -FI_EAGAIN) {				\
+				printf("%s %d\n", op_str, ret);			\
+				return ret;					\
+			}							\
+										\
+			timeout_save = timeout;					\
+			timeout = 0;						\
+			rc = comp_fn(seq);					\
+			if (rc && rc != -FI_EAGAIN) {				\
+				printf("Failed to get %s completion\n", op_str);	\
+				return rc;					\
+			}							\
+			timeout = timeout_save;					\
+		}								\
+		seq++;								\
+	} while (0)
+
+
+int RDMAServer::AllocateActiveRes(struct fi_info *hints, struct fi_info *fi) {
+	int ret;
+
+	if (hints->caps & FI_RMA) {
+		ret = rdma_utils_set_rma_caps(fi);
+		if (ret)
+			return ret;
+	}
+
+	if (cq_attr.format == FI_CQ_FORMAT_UNSPEC) {
+		if (fi->caps & FI_TAGGED)
+			cq_attr.format = FI_CQ_FORMAT_TAGGED;
+		else
+			cq_attr.format = FI_CQ_FORMAT_CONTEXT;
+	}
+
+	if (this->options->options & FT_OPT_TX_CQ) {
+		rdma_utils_cq_set_wait_attr(this->options, this->waitset, &this->cq_attr);
+		cq_attr.size = fi->tx_attr->size;
+		ret = fi_cq_open(domain, &cq_attr, &txcq, &txcq);
+		if (ret) {
+			printf("fi_cq_open %d\n", ret);
+			return ret;
+		}
+	}
+
+	if (this->options->options & FT_OPT_TX_CNTR) {
+		rdma_utils_cntr_set_wait_attr(this->options, this->waitset, &this->cntr_attr);
+		ret = fi_cntr_open(domain, &cntr_attr, &txcntr, &txcntr);
+		if (ret) {
+			printf("fi_cntr_open %d\n", ret);
+			return ret;
+		}
+	}
+
+	if (this->options->options & FT_OPT_RX_CQ) {
+		rdma_utils_cq_set_wait_attr(this->options, this->waitset, &this->cq_attr);
+		cq_attr.size = fi->rx_attr->size;
+		ret = fi_cq_open(domain, &cq_attr, &rxcq, &rxcq);
+		if (ret) {
+			printf("fi_cq_open %d\n", ret);
+			return ret;
+		}
+	}
+
+	if (this->options->options & FT_OPT_RX_CNTR) {
+		rdma_utils_cntr_set_wait_attr(this->options, this->waitset, &this->cntr_attr);
+		ret = fi_cntr_open(domain, &cntr_attr, &rxcntr, &rxcntr);
+		if (ret) {
+			printf("fi_cntr_open %d\n", ret);
+			return ret;
+		}
+	}
+
+	if (fi->ep_attr->type == FI_EP_RDM || fi->ep_attr->type == FI_EP_DGRAM) {
+		if (fi->domain_attr->av_type != FI_AV_UNSPEC) {
+			av_attr.type = fi->domain_attr->av_type;
+		}
+
+		if (this->options->av_name) {
+			av_attr.name = this->options->av_name;
+		}
+		ret = fi_av_open(this->domain, &this->av_attr, &this->av, NULL);
+		if (ret) {
+			printf("fi_av_open %d\n", ret);
+			return ret;
+		}
+	}
+
+	ret = fi_endpoint(domain, fi, &ep, NULL);
+	if (ret) {
+		printf("fi_endpoint %d\n", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
 int RDMAServer::StartServer(void) {
 	int ret;
 
@@ -100,6 +208,71 @@ int RDMAServer::StartServer(void) {
 	return 0;
 }
 
+int ft_get_cq_fd(RDMAOptions *opts, struct fid_cq *cq, int *fd) {
+	int ret = FI_SUCCESS;
+
+	if (cq && opts->comp_method == FT_COMP_WAIT_FD) {
+		ret = fi_control(&cq->fid, FI_GETWAIT, fd);
+		if (ret) {
+			printf("fi_control(FI_GETWAIT) %d\n", ret);
+		}
+	}
+
+	return ret;
+}
+
+int RDMAServer::InitEp(struct fi_info *hints, struct fi_info *fi) {
+	int flags, ret;
+
+	if (fi->ep_attr->type == FI_EP_MSG)
+		FT_EP_BIND(ep, eq, 0);
+	FT_EP_BIND(ep, av, 0);
+	FT_EP_BIND(ep, txcq, FI_TRANSMIT);
+	FT_EP_BIND(ep, rxcq, FI_RECV);
+
+	ret = ft_get_cq_fd(this->options, txcq, &tx_fd);
+	if (ret) {
+		return ret;
+	}
+
+	ret = ft_get_cq_fd(this->options, rxcq, &rx_fd);
+	if (ret) {
+		return ret;
+	}
+
+	/* TODO: use control structure to select counter bindings explicitly */
+	flags = !txcq ? FI_SEND : 0;
+	if (hints->caps & (FI_WRITE | FI_READ)) {
+		flags |= hints->caps & (FI_WRITE | FI_READ);
+	} else if (hints->caps & FI_RMA) {
+		flags |= FI_WRITE | FI_READ;
+	}
+	FT_EP_BIND(ep, txcntr, flags);
+	flags = !rxcq ? FI_RECV : 0;
+	if (hints->caps & (FI_REMOTE_WRITE | FI_REMOTE_READ)) {
+		flags |= hints->caps & (FI_REMOTE_WRITE | FI_REMOTE_READ);
+	} else if (hints->caps & FI_RMA) {
+		flags |= FI_REMOTE_WRITE | FI_REMOTE_READ;
+	}
+	FT_EP_BIND(ep, rxcntr, flags);
+
+	ret = fi_enable(ep);
+	if (ret) {
+		printf("fi_enable %d\n", ret);
+		return ret;
+	}
+
+	if (fi->rx_attr->op_flags != FI_MULTI_RECV) {
+		/* Initial receive will get remote address for unconnected EPs */
+		// ret = ft_post_rx(ep, MAX(rx_size, FT_MAX_CTRL_MSG), &rx_ctx);
+		if (ret) {
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
 
 int RDMAServer::ServerConnect(void) {
 	struct fi_eq_cm_entry entry;
@@ -128,12 +301,12 @@ int RDMAServer::ServerConnect(void) {
 		goto err;
 	}
 
-	ret = rdma_alloc_active_res(fi);
+	ret = AllocateActiveRes(this->info_hints, this->info);
 	if (ret) {
 		goto err;
 	}
 
-	ret = rdma_init_ep();
+	ret = InitEp(this->info_hints, this->info);
 	if (ret) {
 		goto err;
 	}
@@ -181,9 +354,16 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	rdma_utils_get_info(this->options, hints, &this->info);
 
 	this->cq_attr.wait_obj = FI_WAIT_NONE;
+	this->cntr_attr.events = FI_CNTR_EVENTS_COMP;
+	this->cntr_attr.wait_obj = FI_WAIT_NONE;
+
+	this->av_attr.type = FI_AV_MAP;
+	this->av_attr.count = 1;
 
 	// now open fabric
-	OpenFabric();
+	StartServer();
+	// connect to the end point
+	ServerConnect();
 }
 
 

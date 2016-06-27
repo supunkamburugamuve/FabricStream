@@ -36,15 +36,31 @@ class RDMAServer {
     struct fid_pep *pep;
     // end point
     struct fid_ep *ep, *alias_ep;
+    // address vector
+    struct fid_av *av;
 
     struct fi_cq_attr cq_attr;
+    struct fi_cntr_attr cntr_attr;
+    struct fi_av_attr av_attr;
+
+    struct fid_cq *txcq, *rxcq;
+    struct fid_cntr *txcntr, *rxcntr;
+
+    struct fid_wait *waitset;
+
+    int rx_fd = -1, tx_fd = -1;
+
+    struct fi_context tx_ctx, rx_ctx;
+    size_t buf_size, tx_size, rx_size;
+
     /**
      * Private methods
      */
     int AllocateReceive(struct fi_info *fi);
     int OpenFabric(void);
     int ServerConnect(void);
-    int GetInfo( struct fi_info *hints, struct fi_info **info);
+    int AllocateActiveRes(struct fi_info *hints, struct fi_info *fi);
+    int InitEp(struct fi_info *fi, struct fi_info *hints);
 };
 
 #endif
