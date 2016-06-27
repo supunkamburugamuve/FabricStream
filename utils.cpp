@@ -51,7 +51,7 @@ int ft_get_cq_fd(RDMAOptions *opts, struct fid_cq *cq, int *fd) {
 }
 
 
-static void rdma_utils_cq_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cq_attr *cq_attr) {
+void rdma_utils_cq_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cq_attr *cq_attr) {
 	switch (opts->comp_method) {
 	case FT_COMP_SREAD:
 		cq_attr->wait_obj = FI_WAIT_UNSPEC;
@@ -72,7 +72,7 @@ static void rdma_utils_cq_set_wait_attr(RDMAOptions *opts, struct fid_wait *wait
 	}
 }
 
-static void rdma_utils_cntr_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cntr_attr *cntr_attr) {
+void rdma_utils_cntr_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cntr_attr *cntr_attr) {
 	switch (opts->comp_method) {
 	case FT_COMP_SREAD:
 		cntr_attr->wait_obj = FI_WAIT_UNSPEC;
