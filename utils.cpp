@@ -36,6 +36,19 @@ int rdma_utils_set_rma_caps(struct fi_info *fi) {
 	return 0;
 }
 
+int ft_get_cq_fd(RDMAOptions *opts, struct fid_cq *cq, int *fd) {
+	int ret = FI_SUCCESS;
+
+	if (cq && opts->comp_method == FT_COMP_WAIT_FD) {
+		ret = fi_control(&cq->fid, FI_GETWAIT, fd);
+		if (ret) {
+			printf("fi_control(FI_GETWAIT) %d\n", ret);
+		}
+	}
+
+	return ret;
+}
+
 
 static void rdma_utils_cq_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cq_attr *cq_attr) {
 	switch (opts->comp_method) {
