@@ -101,6 +101,7 @@ int main(int argc, char **argv) {
 	} else {
 		RDMAServer server(&options, hints);
 		server.StartServer();
+		server.ServerConnect();
 	}
 
     return 0;

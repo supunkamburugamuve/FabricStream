@@ -12,6 +12,7 @@ class RDMAServer {
   public:
 	RDMAServer(RDMAOptions *opts, struct fi_info *hints) ;
     int StartServer(void);
+    int ServerConnect(void);
     // free all the resources
     void ShutDown();
   private:
@@ -58,7 +59,6 @@ class RDMAServer {
      */
     int AllocateReceive(struct fi_info *fi);
     int OpenFabric(void);
-    int ServerConnect(void);
     int AllocateActiveRes(struct fi_info *hints, struct fi_info *fi);
     int InitEp(struct fi_info *fi, struct fi_info *hints);
 };

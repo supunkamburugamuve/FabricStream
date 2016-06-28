@@ -347,11 +347,6 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 
 	this->av_attr.type = FI_AV_MAP;
 	this->av_attr.count = 1;
-
-	// now open fabric
-	StartServer();
-	// connect to the end point
-	ServerConnect();
 }
 
 
