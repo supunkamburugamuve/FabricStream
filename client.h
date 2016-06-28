@@ -36,9 +36,9 @@ private:
   // address vector
   struct fid_av *av;
 
-  struct fi_cq_attr cq_attr;
-  struct fi_cntr_attr cntr_attr;
-  struct fi_av_attr av_attr;
+  struct fi_cq_attr cq_attr = {};
+  struct fi_cntr_attr cntr_attr = {};
+  struct fi_av_attr av_attr = {};
 
   struct fid_cq *txcq, *rxcq;
   struct fid_cntr *txcntr, *rxcntr;
