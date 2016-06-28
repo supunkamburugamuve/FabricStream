@@ -17,7 +17,7 @@ int RDMACLient::ShutDown(void) {
 	return 0;
 }
 
-int RDMACLient::OpenFabric(void) {
+int OpenFabric2(void) {
 	fi_info *f;
 	int ret;
 	printf("Fabric name: %s, Prov Name %s\n", this->info->fabric_attr->name, this->info->fabric_attr->prov_name);
@@ -181,6 +181,30 @@ int RDMACLient::InitEp(struct fi_info *hints, struct fi_info *fi) {
 		if (ret) {
 			return ret;
 		}
+	}
+
+	return 0;
+}
+
+int RDMACLient::OpenFabric(void) {
+	int ret;
+
+	ret = fi_fabric(this->info->fabric_attr, &fabric, NULL);
+	if (ret) {
+		printf("fi_fabric %d\n", ret);
+		return ret;
+	}
+
+	ret = fi_eq_open(fabric, &eq_attr, &eq, NULL);
+	if (ret) {
+		printf("fi_eq_open %d\n", ret);
+		return ret;
+	}
+
+	ret = fi_domain(fabric, this->info, &domain, NULL);
+	if (ret) {
+		printf("fi_domain %d\n", ret);
+		return ret;
 	}
 
 	return 0;
