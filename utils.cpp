@@ -164,7 +164,6 @@ int rdma_utils_read_addr_opts(char **node, char **service, struct fi_info *hints
 }
 
 int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_info **info) {
-	int ret;
 	char *fi_str;
 	char *node, *service;
 	uint64_t flags = 0;

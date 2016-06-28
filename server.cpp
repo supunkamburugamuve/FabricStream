@@ -16,7 +16,6 @@
 int RDMAServer::OpenFabric(void) {
 	fi_info *f;
 	int ret;
-	char *name = "IB-0x80fe";
 	this->info->fabric_attr->name = this->options->fname;
 	printf("Fabric name: %s, Prov Name %s\n", this->info->fabric_attr->name, this->info->fabric_attr->prov_name);
 	ret = fi_fabric(this->info->fabric_attr, &this->fabric, NULL);
@@ -306,7 +305,7 @@ int RDMAServer::ServerConnect(void) {
 
 	rd = fi_eq_sread(eq, &event, &entry, sizeof entry, -1, 0);
 	if (rd != sizeof entry) {
-		printf("fi_eq_sread accept %d\n", rd);
+		printf("fi_eq_sread accept %d\n", (int)rd);
 		ret = (int) rd;
 		goto err;
 	}
@@ -328,7 +327,6 @@ err:
  * Initialize the server with options
  */
 RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
-    char *fi_str;
 	this->options = opts;
 
 	// allocate the hints

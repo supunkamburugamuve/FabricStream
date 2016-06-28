@@ -16,7 +16,6 @@
 int RDMACLient::OpenFabric(void) {
 	fi_info *f;
 	int ret;
-	char *name = "IB-0x80fe";
 	this->info->fabric_attr->name = this->options->fname;
 	printf("Fabric name: %s, Prov Name %s\n", this->info->fabric_attr->name, this->info->fabric_attr->prov_name);
 	ret = fi_fabric(this->info->fabric_attr, &this->fabric, NULL);
@@ -212,7 +211,7 @@ int RDMACLient::ClientConnect(void) {
 
 	rd = fi_eq_sread(eq, &event, &entry, sizeof entry, -1, 0);
 	if (rd != sizeof entry) {
-		printf("fi_eq_sread", "connect");
+		printf("fi_eq_sread connect\n");
 		ret = (int) rd;
 		return ret;
 	}
@@ -228,7 +227,6 @@ int RDMACLient::ClientConnect(void) {
 }
 
 RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
-	int ret;
 	char *node, *service;
 	uint64_t flags = 0;
 
