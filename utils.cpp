@@ -210,7 +210,8 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 			next = next->next;
 		}
 	} else {
-		// throw exception, we cannot proceed
+		printf("No information returned\n");
+		return 1;
 	}
 	return 0;
 }
