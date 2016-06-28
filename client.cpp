@@ -57,7 +57,7 @@ int RDMACLient::OpenFabric(void) {
 
 int RDMACLient::AllocateActiveRes(struct fi_info *hints, struct fi_info *fi) {
 	int ret;
-
+	printf("Allocate recv\n");
 	if (hints->caps & FI_RMA) {
 		ret = rdma_utils_set_rma_caps(fi);
 		if (ret)
@@ -136,8 +136,10 @@ int RDMACLient::AllocateActiveRes(struct fi_info *hints, struct fi_info *fi) {
 int RDMACLient::InitEp(struct fi_info *hints, struct fi_info *fi) {
 	int flags, ret;
 
-	if (fi->ep_attr->type == FI_EP_MSG)
+	printf("Init EP\n");
+	if (fi->ep_attr->type == FI_EP_MSG) {
 		FT_EP_BIND(ep, eq, 0);
+	}
 	FT_EP_BIND(ep, av, 0);
 	FT_EP_BIND(ep, txcq, FI_TRANSMIT);
 	FT_EP_BIND(ep, rxcq, FI_RECV);
@@ -191,6 +193,7 @@ int RDMACLient::ClientConnect(void) {
 	ssize_t rd;
 	int ret;
 
+	printf("Client connect \n");
 	ret = rdma_utils_get_info(options, info_hints, &info);
 	if (ret)
 		return ret;
@@ -234,6 +237,7 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 	char *node, *service;
 	uint64_t flags = 0;
 
+	printf("RDMA Client\n");
 	char *fi_str;
 	this->options = opts;
 

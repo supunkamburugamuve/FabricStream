@@ -14,6 +14,7 @@
 #include "utils.h"
 
 int RDMAServer::OpenFabric(void) {
+	printf("Open fabric\n");
 	fi_info *f;
 	int ret;
 	this->info->fabric_attr->name = this->options->fname;
@@ -84,7 +85,7 @@ int timeout = 0;
 
 int RDMAServer::AllocateActiveRes(struct fi_info *hints, struct fi_info *fi) {
 	int ret;
-
+	printf("Allocate recv\n");
 	if (hints->caps & FI_RMA) {
 		ret = rdma_utils_set_rma_caps(fi);
 		if (ret)
@@ -162,7 +163,7 @@ int RDMAServer::AllocateActiveRes(struct fi_info *hints, struct fi_info *fi) {
 
 int RDMAServer::StartServer(void) {
 	int ret;
-
+	printf("Start server\n");
 	// info for passive end-point
 	ret = rdma_utils_get_info(this->options, this->info_hints, &this->info_pep);
 	if (ret) {
@@ -208,6 +209,7 @@ int RDMAServer::StartServer(void) {
 }
 
 int RDMAServer::InitEp(struct fi_info *hints, struct fi_info *fi) {
+	printf("Init Ep\n");
 	int flags, ret;
 
 	if (fi->ep_attr->type == FI_EP_MSG)
@@ -265,7 +267,7 @@ int RDMAServer::ServerConnect(void) {
 	uint32_t event;
 	ssize_t rd;
 	int ret;
-
+	printf("Server connect\n");
 	// read the events for incoming messages
 	rd = fi_eq_sread(eq, &event, &entry, sizeof entry, -1, 0);
 	if (rd != sizeof entry) {
@@ -327,6 +329,7 @@ err:
  * Initialize the server with options
  */
 RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
+	printf("RDMAServer\n");
 	this->options = opts;
 
 	// allocate the hints
