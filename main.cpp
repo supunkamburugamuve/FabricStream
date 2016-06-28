@@ -87,11 +87,21 @@ int main(int argc, char **argv) {
 		}
 	}
 
+    if (optind < argc) {
+    	options.dst_addr = argv[optind];
+    }
+
     hints->ep_attr->type = FI_EP_RDM;
 	hints->caps = FI_MSG | FI_RMA;
 	hints->mode = FI_CONTEXT | FI_LOCAL_MR | FI_RX_CQ_DATA;
 
-    RDMAServer server(&options, hints);
-    RDMACLient client(&options, hints);
+	if (options.dst_addr) {
+		RDMACLient client(&options, hints);
+		client.ClientConnect();
+	} else {
+		RDMAServer server(&options, hints);
+		server.StartServer();
+	}
+
     return 0;
 }

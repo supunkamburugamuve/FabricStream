@@ -14,9 +14,9 @@
 class RDMACLient {
 public:
   RDMACLient(RDMAOptions *opts, struct fi_info *hints);
-  int StartClient(void);
+  int ClientConnect(void);
   // free all the resources
-  void ShutDown();
+  int ShutDown();
 private:
   // options for initialization
   RDMAOptions *options;
@@ -54,7 +54,7 @@ private:
    */
   int AllocateReceive(struct fi_info *fi);
   int OpenFabric(void);
-  int ClientConnect(void);
+
   int InitEp(struct fi_info *hints, struct fi_info *fi);
   int AllocateActiveRes(struct fi_info *hints, struct fi_info *fi);
 };

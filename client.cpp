@@ -13,6 +13,10 @@
 #include "rdma_fabric.h"
 #include "utils.h"
 
+int RDMACLient::ShutDown(void) {
+	return 0;
+}
+
 int RDMACLient::OpenFabric(void) {
 	fi_info *f;
 	int ret;
@@ -267,6 +271,4 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 	} else {
 		// throw exception, we cannot proceed
 	}
-
-	ClientConnect();
 }
