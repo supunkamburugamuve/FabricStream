@@ -26,7 +26,7 @@ private:
   struct fi_info *info_hints;
   // the fabric
   struct fid_fabric *fabric;
-  struct fi_eq_attr eq_attr;
+  struct fi_eq_attr eq_attr = {};
   // the event queue to listen on
   struct fid_eq *eq;
   // fabric domain we are working with
