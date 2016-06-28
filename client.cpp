@@ -234,11 +234,7 @@ int RDMACLient::ClientConnect(void) {
 }
 
 RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
-	char *node, *service;
-	uint64_t flags = 0;
-
 	printf("RDMA Client\n");
-	char *fi_str;
 	this->options = opts;
 
 	// allocate the hints
@@ -247,32 +243,13 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 	// initialize this attribute, search weather this is correct
 	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
 
-	// read the parameters from the options
-	rdma_utils_read_addr_opts(&node, &service, this->info_hints, &flags, opts);
+	// get the information
+	// rdma_utils_get_info(this->options, hints, &this->info);
 
-	// default to RDM
-	if (!hints->ep_attr->type) {
-		hints->ep_attr->type = FI_EP_RDM;
-	}
+	this->cq_attr.wait_obj = FI_WAIT_NONE;
+	this->cntr_attr.events = FI_CNTR_EVENTS_COMP;
+	this->cntr_attr.wait_obj = FI_WAIT_NONE;
 
-	this->info_hints->domain_attr->mr_mode = FI_MR_BASIC;
-	this->info_hints->ep_attr->type = FI_EP_RDM;
-	this->info_hints->caps = FI_MSG | FI_RMA | FI_RMA_EVENT;
-	this->info_hints->mode = FI_CONTEXT | FI_LOCAL_MR | FI_RX_CQ_DATA;
-
-	// now lets retrieve the available network services
-	// according to hints
-	int ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, this->info_hints, &this->info);
-	if (this->info) {
-		fi_info *next = this->info;
-		while (next) {
-			fi_fabric_attr *attr = next->fabric_attr;
-			printf("fabric attr name=%s prov_name=%s\n", attr->name, attr->prov_name);
-			fi_str = fi_tostr(next, FI_TYPE_INFO);
-			std::cout << "FI" << fi_str << std::endl;
-			next = next->next;
-		}
-	} else {
-		// throw exception, we cannot proceed
-	}
+	this->av_attr.type = FI_AV_MAP;
+	this->av_attr.count = 1;
 }
