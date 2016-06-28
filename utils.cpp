@@ -191,10 +191,10 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 		hints->ep_attr->type = FI_EP_RDM;
 	}
 
-	hints->domain_attr->mr_mode = FI_MR_BASIC;
-	hints->ep_attr->type = FI_EP_RDM;
-	hints->caps = FI_MSG | FI_RMA | FI_RMA_EVENT;
-	hints->mode = FI_CONTEXT | FI_LOCAL_MR | FI_RX_CQ_DATA;
+//	hints->domain_attr->mr_mode = FI_MR_BASIC;
+//	hints->ep_attr->type = FI_EP_RDM;
+//	hints->caps = FI_MSG | FI_RMA | FI_RMA_EVENT;
+//	hints->mode = FI_CONTEXT | FI_LOCAL_MR | FI_RX_CQ_DATA;
 
 	// now lets retrieve the available network services
 	// according to hints
