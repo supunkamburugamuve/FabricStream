@@ -339,7 +339,7 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
 
 	// get the information
-	rdma_utils_get_info(this->options, hints, &this->info);
+	// rdma_utils_get_info(this->options, hints, &this->info);
 
 	this->cq_attr.wait_obj = FI_WAIT_NONE;
 	this->cntr_attr.events = FI_CNTR_EVENTS_COMP;
