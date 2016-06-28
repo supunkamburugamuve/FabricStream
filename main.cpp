@@ -51,16 +51,19 @@ void rdma_parseinfo(int op, char *optarg, struct fi_info *hints) {
 void rdma_parse_addr_opts(int op, char *optarg, RDMAOptions *opts) {
 	switch (op) {
 	case 's':
+		printf("source addr: %s\n", optarg);
 		opts->src_addr = optarg;
 		break;
 	case 'b':
+		printf("source port: %s\n", optarg);
 		opts->src_port = optarg;
 		break;
 	case 'p':
+		printf("dst port: %s\n", optarg);
 		opts->dst_port = optarg;
 		break;
 	case 'r':
-		printf("name: %s\n", optarg);
+		printf("fname: %s\n", optarg);
 		opts->fname = strdup(optarg);
 		break;
 	default:
@@ -89,6 +92,7 @@ int main(int argc, char **argv) {
 
     if (optind < argc) {
     	options.dst_addr = argv[optind];
+    	printf("dst addr: %s\n", options.dst_addr);
     }
 
     hints->ep_attr->type = FI_EP_RDM;
