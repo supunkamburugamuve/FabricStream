@@ -163,6 +163,22 @@ int rdma_utils_read_addr_opts(char **node, char **service, struct fi_info *hints
 	return 0;
 }
 
+static int print_short_info(struct fi_info *info) {
+	for (struct fi_info *cur = info; cur; cur = cur->next) {
+		printf("provider: %s\n", cur->fabric_attr->prov_name);
+		printf("    fabric: %s\n", cur->fabric_attr->name),
+		printf("    domain: %s\n", cur->domain_attr->name),
+		printf("    version: %d.%d\n", FI_MAJOR(cur->fabric_attr->prov_version),
+			FI_MINOR(cur->fabric_attr->prov_version));
+		if (!1) {
+			printf("    type: %s\n", fi_tostr(&cur->ep_attr->type, FI_TYPE_EP_TYPE));
+			printf("    protocol: %s\n", fi_tostr(&cur->ep_attr->protocol, FI_TYPE_PROTOCOL));
+		}
+	}
+	return EXIT_SUCCESS;
+}
+
+
 int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_info **info) {
 	char *fi_str;
 	char *node, *service;
@@ -188,8 +204,9 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 		while (next) {
 			fi_fabric_attr *attr = next->fabric_attr;
 			printf("fabric attr name=%s prov_name=%s\n", attr->name, attr->prov_name);
-			fi_str = fi_tostr(next, FI_TYPE_INFO);
-			std::cout << "FI" << fi_str << std::endl;
+			// fi_str = fi_tostr(next, FI_TYPE_INFO);
+			// std::cout << "FI" << fi_str << std::endl;
+			print_short_info(next);
 			next = next->next;
 		}
 	} else {
