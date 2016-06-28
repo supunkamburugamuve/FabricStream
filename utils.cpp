@@ -116,7 +116,7 @@ static int rdm_utils_getaddr(char *node, char *service,
 		return 0;
 	}
 
-	printf("Get info with options node=%s service=%s flags=%d\n", node, service, flags);
+	printf("Get info with options node=%s service=%s flags=%d\n", node, service, (int)flags);
 
 	ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, hints, &fi);
 	if (ret) {
@@ -182,7 +182,7 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 
 	// now lets retrieve the available network services
 	// according to hints
-	ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, hints, info);
+	int ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, hints, info);
 	if (*info) {
 		fi_info *next = *info;
 		while (next) {

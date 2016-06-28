@@ -254,7 +254,7 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 
 	// now lets retrieve the available network services
 	// according to hints
-	ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, this->info_hints, &this->info);
+	int ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, this->info_hints, &this->info);
 	if (this->info) {
 		fi_info *next = this->info;
 		while (next) {
