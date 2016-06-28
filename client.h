@@ -54,6 +54,7 @@ private:
    */
   int AllocateReceive(struct fi_info *fi);
   int OpenFabric(void);
+  int OpenFabric2(void);
 
   int InitEp(struct fi_info *hints, struct fi_info *fi);
   int AllocateActiveRes(struct fi_info *hints, struct fi_info *fi);

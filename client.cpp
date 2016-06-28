@@ -17,7 +17,7 @@ int RDMACLient::ShutDown(void) {
 	return 0;
 }
 
-int OpenFabric2(void) {
+int RDMACLient::OpenFabric2(void) {
 	fi_info *f;
 	int ret;
 	printf("Fabric name: %s, Prov Name %s\n", this->info->fabric_attr->name, this->info->fabric_attr->prov_name);
