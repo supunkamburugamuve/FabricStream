@@ -143,6 +143,7 @@ int RDMACLient::InitEp(struct fi_info *hints, struct fi_info *fi) {
 	FT_EP_BIND(ep, txcq, FI_TRANSMIT);
 	FT_EP_BIND(ep, rxcq, FI_RECV);
 
+	printf("av txcq rxcp bind\n");
 	ret = ft_get_cq_fd(this->options, txcq, &tx_fd);
 	if (ret) {
 		return ret;
@@ -161,6 +162,7 @@ int RDMACLient::InitEp(struct fi_info *hints, struct fi_info *fi) {
 		flags |= FI_WRITE | FI_READ;
 	}
 	FT_EP_BIND(ep, txcntr, flags);
+	printf("av txcq txcntr bind\n");
 	flags = !rxcq ? FI_RECV : 0;
 	if (hints->caps & (FI_REMOTE_WRITE | FI_REMOTE_READ)) {
 		flags |= hints->caps & (FI_REMOTE_WRITE | FI_REMOTE_READ);
@@ -168,7 +170,7 @@ int RDMACLient::InitEp(struct fi_info *hints, struct fi_info *fi) {
 		flags |= FI_REMOTE_WRITE | FI_REMOTE_READ;
 	}
 	FT_EP_BIND(ep, rxcntr, flags);
-
+	printf("av txcq rxcntr bind\n");
 	ret = fi_enable(ep);
 	if (ret) {
 		printf("fi_enable %d\n", ret);
