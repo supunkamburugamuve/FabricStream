@@ -199,6 +199,9 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 	// now lets retrieve the available network services
 	// according to hints
 	int ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, hints, info);
+	if (ret) {
+		printf("Fi_info failed %d\n", ret);
+	}
 	if (*info) {
 		fi_info *next = *info;
 		while (next) {
