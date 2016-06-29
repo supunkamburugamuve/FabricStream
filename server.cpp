@@ -320,6 +320,8 @@ int RDMAServer::ServerConnect(void) {
 		goto err;
 	}
 
+	printf("Connection established\n");
+
 	return 0;
 err:
 	fi_reject(pep, info->handle, NULL, 0);

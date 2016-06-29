@@ -257,6 +257,8 @@ int RDMACLient::ClientConnect(void) {
 		return ret;
 	}
 
+	printf("COnnection established\n");
+
 	return 0;
 }
 
