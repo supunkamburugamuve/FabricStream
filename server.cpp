@@ -215,7 +215,7 @@ int RDMAServer::InitEp(struct fi_info *hints, struct fi_info *fi) {
 	if (fi->ep_attr->type == FI_EP_MSG) {
 		FT_EP_BIND(ep, eq, 0);
 	}
-	// FT_EP_BIND(ep, av, 0);
+	FT_EP_BIND(ep, av, 0);
 	FT_EP_BIND(ep, txcq, FI_TRANSMIT);
 	FT_EP_BIND(ep, rxcq, FI_RECV);
 
@@ -332,6 +332,19 @@ err:
 RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	printf("RDMAServer\n");
 	this->options = opts;
+
+	this->txcq = NULL;
+	this->rxcq = NULL;
+	this->txcntr = NULL;
+	this->rxcntr = NULL;
+	this->info_pep = NULL;
+	this->fabric = NULL;
+	this->eq = NULL;
+	this->domain = NULL;
+	this->pep = NULL;
+	this->ep = NULL;
+	this->alias_ep = NULL;
+	this->av = NULL;
 
 	// allocate the hints
 	this->info_hints = hints;

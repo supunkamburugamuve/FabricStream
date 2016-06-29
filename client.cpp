@@ -264,6 +264,19 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 	printf("RDMA Client\n");
 	this->options = opts;
 
+	this->txcq = NULL;
+	this->rxcq = NULL;
+	this->txcntr = NULL;
+	this->rxcntr = NULL;
+	this->info_pep = NULL;
+	this->fabric = NULL;
+	this->eq = NULL;
+	this->domain = NULL;
+	this->pep = NULL;
+	this->ep = NULL;
+	this->alias_ep = NULL;
+	this->av = NULL;
+
 	// allocate the hints
 	this->info_hints = hints;
 	this->eq_attr = {};
