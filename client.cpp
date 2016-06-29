@@ -136,7 +136,7 @@ int RDMACLient::InitEp(struct fi_info *hints, struct fi_info *fi) {
 	int flags, ret;
 
 	printf("Init EP\n");
-	if (fi->ep_attr->type == FI_EP_MSG);
+	if (fi->ep_attr->type == FI_EP_MSG)
 		FT_EP_BIND(ep, eq, 0);
 	//FT_EP_BIND(ep, av, 0);
 	printf("av txcq rxcp bind 1\n");
