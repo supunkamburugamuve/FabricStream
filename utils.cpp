@@ -23,7 +23,7 @@ RDMAOptions::RDMAOptions() {
 	this->src_addr = NULL;
 	this->src_port = NULL;
 	this->av_name = NULL;
-	this->options = 0;
+	this->options = FT_OPT_RX_CQ | FT_OPT_TX_CQ;
 }
 
 int rdma_utils_set_rma_caps(struct fi_info *fi) {
