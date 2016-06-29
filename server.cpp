@@ -335,7 +335,6 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 
 	// allocate the hints
 	this->info_hints = hints;
-
 	this->eq_attr = {};
 	this->cq_attr = {};
 	this->cntr_attr = {};
