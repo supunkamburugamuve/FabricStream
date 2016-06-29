@@ -268,11 +268,9 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 	this->rxcq = NULL;
 	this->txcntr = NULL;
 	this->rxcntr = NULL;
-	this->info_pep = NULL;
 	this->fabric = NULL;
 	this->eq = NULL;
 	this->domain = NULL;
-	this->pep = NULL;
 	this->ep = NULL;
 	this->alias_ep = NULL;
 	this->av = NULL;
