@@ -157,7 +157,7 @@ int rdma_utils_read_addr_opts(char **node, char **service, struct fi_info *hints
 		}
 		*node = opts->src_addr;
 		*service = opts->src_port;
-		// *flags = FI_SOURCE;
+		*flags = FI_SOURCE;
 	}
 
 	return 0;
