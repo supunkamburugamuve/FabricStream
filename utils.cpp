@@ -157,7 +157,7 @@ int rdma_utils_read_addr_opts(char **node, char **service, struct fi_info *hints
 		}
 		*node = opts->src_addr;
 		*service = opts->src_port;
-		*flags = FI_SOURCE;
+		// *flags = FI_SOURCE;
 	}
 
 	return 0;
@@ -190,6 +190,7 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 	if (!hints->ep_attr->type) {
 		hints->ep_attr->type = FI_EP_RDM;
 	}
+	hints->ep_attr->type = FI_EP_RDM;
 
 //	hints->domain_attr->mr_mode = FI_MR_BASIC;
 //	hints->ep_attr->type = FI_EP_RDM;
