@@ -212,8 +212,9 @@ int RDMAServer::InitEp(struct fi_info *hints, struct fi_info *fi) {
 	printf("Init Ep\n");
 	int flags, ret;
 
-	if (fi->ep_attr->type == FI_EP_MSG)
+	if (fi->ep_attr->type == FI_EP_MSG) {
 		FT_EP_BIND(ep, eq, 0);
+	}
 	FT_EP_BIND(ep, av, 0);
 	FT_EP_BIND(ep, txcq, FI_TRANSMIT);
 	FT_EP_BIND(ep, rxcq, FI_RECV);
