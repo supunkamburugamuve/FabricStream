@@ -140,8 +140,11 @@ int RDMACLient::InitEp(struct fi_info *hints, struct fi_info *fi) {
 		FT_EP_BIND(ep, eq, 0);
 	}
 	FT_EP_BIND(ep, av, 0);
+	printf("av txcq rxcp bind 1\n");
 	FT_EP_BIND(ep, txcq, FI_TRANSMIT);
+	printf("av txcq rxcp bind 2\n");
 	FT_EP_BIND(ep, rxcq, FI_RECV);
+	printf("av txcq rxcp bind 3\n");
 
 	printf("av txcq rxcp bind\n");
 	ret = ft_get_cq_fd(this->options, txcq, &tx_fd);
