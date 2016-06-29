@@ -267,7 +267,10 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 
 	// allocate the hints
 	this->info_hints = hints;
-
+	this->eq_attr = {};
+	this->cq_attr = {};
+	this->cntr_attr = {};
+	this->av_attr = {};
 	// initialize this attribute, search weather this is correct
 	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
 
