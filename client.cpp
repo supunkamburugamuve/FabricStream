@@ -1,5 +1,9 @@
 #include <iostream>
 #include <cstdio>
+#include <cstdlib>
+#include <unistd.h>
+#include <cstdlib>
+#include <cstring>
 
 #include <rdma/fabric.h>
 #include <rdma/fi_domain.h>
@@ -59,7 +63,7 @@ int RDMACLient::OpenFabric2(void) {
  * buffer is large enough for a control message used to exchange addressing
  * data.
  */
-int RDMAServer::AllocMsgs(void) {
+int RDMACLient::AllocMsgs(void) {
 	int ret;
 	long alignment = 1;
 	RDMAOptions *opts = this->options;

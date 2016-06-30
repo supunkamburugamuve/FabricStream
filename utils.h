@@ -68,7 +68,7 @@ public:
 				return ret;				\
 			}						\
 		}							\
-	} while (0)static uint64_t rdma_utils_caps_to_mr_access(uint64_t caps)
+	} while (0)
 
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
