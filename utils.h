@@ -11,6 +11,12 @@
 #include <rdma/fi_rma.h>
 #include <rdma/fi_errno.h>
 
+#include <assert.h>
+#include <netdb.h>
+#include <poll.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
 #define ADDR_OPTS "b:p:s:a:r:"
 #define INFO_OPTS "n:f:e:"
 
@@ -92,6 +98,6 @@ void rdma_utils_cntr_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, 
 size_t rdma_utils_rx_prefix_size(struct fi_info *fi);
 size_t rdma_utils_tx_prefix_size(struct fi_info *fi);
 uint64_t rdma_utils_init_cq_data(struct fi_info *info);
-static uint64_t rdma_utils_caps_to_mr_access(uint64_t caps);
+uint64_t rdma_utils_caps_to_mr_access(uint64_t caps);
 
 #endif

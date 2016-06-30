@@ -239,7 +239,7 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 	return 0;
 }
 
-static uint64_t rdma_utils_caps_to_mr_access(uint64_t caps) {
+uint64_t rdma_utils_caps_to_mr_access(uint64_t caps) {
 	uint64_t mr_access = 0;
 
 	if (caps & (FI_MSG | FI_TAGGED)) {
