@@ -68,7 +68,7 @@ class RDMAServer {
     int OpenFabric(void);
     int AllocateActiveRes(struct fi_info *hints, struct fi_info *fi);
     int InitEp(struct fi_info *fi, struct fi_info *hints);
-    int RDMAServer::AllocMsgs(void);
+    int AllocMsgs(void);
 };
 
 #endif
