@@ -68,11 +68,15 @@ public:
 				return ret;				\
 			}						\
 		}							\
-	} while (0)
+	} while (0)static uint64_t rdma_utils_caps_to_mr_access(uint64_t caps)
 
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
 #define FT_MAX_CTRL_MSG 64
+#define FT_STR_LEN 32
+#define FT_MR_KEY 0xC0DE
+#define FT_MSG_MR_ACCESS (FI_SEND | FI_RECV)
+#define FT_RMA_MR_ACCESS (FI_READ | FI_WRITE | FI_REMOTE_READ | FI_REMOTE_WRITE)
 
 /**
  * Given the options, create node, service, hints and flags
@@ -84,5 +88,10 @@ int ft_get_cq_fd(RDMAOptions *opts, struct fid_cq *cq, int *fd);
 int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_info **info);
 void rdma_utils_cq_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cq_attr *cq_attr);
 void rdma_utils_cntr_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cntr_attr *cntr_attr);
+
+size_t rdma_utils_rx_prefix_size(struct fi_info *fi);
+size_t rdma_utils_tx_prefix_size(struct fi_info *fi);
+uint64_t rdma_utils_init_cq_data(struct fi_info *info);
+static uint64_t rdma_utils_caps_to_mr_access(uint64_t caps);
 
 #endif

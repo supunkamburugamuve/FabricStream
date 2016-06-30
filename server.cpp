@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdio>
+#include <cstdlib>
 
 #include <rdma/fabric.h>
 #include <rdma/fi_domain.h>
@@ -82,6 +83,72 @@ int timeout = 0;
 		seq++;								\
 	} while (0)
 
+/*
+ * Include FI_MSG_PREFIX space in the allocated buffer, and ensure that the
+ * buffer is large enough for a control message used to exchange addressing
+ * data.
+ */
+int RDMAServer::AllocMsgs(void) {
+	int ret;
+	long alignment = 1;
+	RDMAOptions *opts = this->options;
+	/* TODO: support multi-recv tests */
+	if (info->rx_attr->op_flags == FI_MULTI_RECV)
+		return 0;
+
+	tx_size = 10000;
+	if (tx_size > info->ep_attr->max_msg_size)
+		tx_size = info->ep_attr->max_msg_size;
+	rx_size = tx_size + rdma_utils_rx_prefix_size(this->info);
+	tx_size += rdma_utils_tx_prefix_size(this->info);
+
+	buf_size = MAX(tx_size, FT_MAX_CTRL_MSG) + MAX(rx_size, FT_MAX_CTRL_MSG);
+
+	if (opts->options & FT_OPT_ALIGN) {
+		alignment = sysconf(_SC_PAGESIZE);
+		if (alignment < 0)
+			return -errno;
+		buf_size += alignment;
+
+		ret = posix_memalign(&buf, (size_t) alignment, buf_size);
+		if (ret) {
+			printf("posix_memalign %d\n", ret);
+			return ret;
+		}
+	} else {
+		buf = malloc(buf_size);
+		if (!buf) {
+			perror("malloc");
+			return -FI_ENOMEM;
+		}
+	}
+	memset(buf, 0, buf_size);
+	rx_buf = buf;
+	tx_buf = (char *) buf + MAX(rx_size, FT_MAX_CTRL_MSG);
+	tx_buf = (void *) (((uintptr_t) tx_buf + alignment - 1) & ~(alignment - 1));
+
+	remote_cq_data = rdma_utils_init_cq_data(info);
+
+//	if (opts->window_size > 0) {
+//		ctx_arr = calloc(opts->window_size, sizeof(struct fi_context));
+//		if (!ctx_arr)
+//			return -FI_ENOMEM;
+//	}
+
+	if (!ft_skip_mr && ((info->mode & FI_LOCAL_MR) ||
+				(info->caps & (FI_RMA | FI_ATOMIC)))) {
+		ret = fi_mr_reg(domain, buf, buf_size, rdma_utils_caps_to_mr_access(info->caps),
+				0, FT_MR_KEY, 0, &mr, NULL);
+		if (ret) {
+			printf("fi_mr_reg", ret);
+			return ret;
+		}
+	} else {
+		mr = &no_mr;
+	}
+
+	return 0;
+}
 
 int RDMAServer::AllocateActiveRes(struct fi_info *hints, struct fi_info *fi) {
 	int ret;
@@ -91,6 +158,10 @@ int RDMAServer::AllocateActiveRes(struct fi_info *hints, struct fi_info *fi) {
 		if (ret)
 			return ret;
 	}
+
+	ret = AllocMsgs();
+	if (ret)
+		return ret;
 
 	if (cq_attr.format == FI_CQ_FORMAT_UNSPEC) {
 		if (fi->caps & FI_TAGGED)
@@ -334,6 +405,8 @@ err:
 RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	printf("RDMAServer\n");
 	this->options = opts;
+	this->info = NULL;
+	this->info_pep = NULL;
 
 	this->txcq = NULL;
 	this->rxcq = NULL;
@@ -347,6 +420,19 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	this->ep = NULL;
 	this->alias_ep = NULL;
 	this->av = NULL;
+	this->mr = NULL;
+	this->no_mr = {};
+
+	this->tx_buf = NULL;
+	this->buf = NULL;
+	this->rx_buf = NULL;
+
+	this->buf_size = 0;
+	this->tx_size = 0;
+	this->rx_size = 0;
+
+	this->remote_cq_data = 0;
+	this->waitset = NULL;
 
 	// allocate the hints
 	this->info_hints = hints;

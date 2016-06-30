@@ -50,6 +50,24 @@ int ft_get_cq_fd(RDMAOptions *opts, struct fid_cq *cq, int *fd) {
 	return ret;
 }
 
+size_t rdma_utils_tx_prefix_size(struct fi_info *fi) {
+	return (fi->tx_attr->mode & FI_MSG_PREFIX) ?
+		fi->ep_attr->msg_prefix_size : 0;
+}
+
+size_t rdma_utils_rx_prefix_size(struct fi_info *fi) {
+	return (fi->rx_attr->mode & FI_MSG_PREFIX) ?
+		fi->ep_attr->msg_prefix_size : 0;
+}
+
+uint64_t rdma_utils_init_cq_data(struct fi_info *info) {
+	if (info->domain_attr->cq_data_size >= sizeof(uint64_t)) {
+		return 0x0123456789abcdefULL;
+	} else {
+		return 0x0123456789abcdef &
+			((0x1ULL << (info->domain_attr->cq_data_size * 8)) - 1);
+	}
+}
 
 void rdma_utils_cq_set_wait_attr(RDMAOptions *opts, struct fid_wait *waitset, struct fi_cq_attr *cq_attr) {
 	switch (opts->comp_method) {
@@ -220,6 +238,27 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 	}
 	return 0;
 }
+
+static uint64_t rdma_utils_caps_to_mr_access(uint64_t caps) {
+	uint64_t mr_access = 0;
+
+	if (caps & (FI_MSG | FI_TAGGED)) {
+		if (caps & FT_MSG_MR_ACCESS)
+			mr_access |= caps & FT_MSG_MR_ACCESS;
+		else
+			mr_access |= FT_MSG_MR_ACCESS;
+	}
+
+	if (caps & (FI_RMA | FI_ATOMIC)) {
+		if (caps & FT_RMA_MR_ACCESS)
+			mr_access |= caps & FT_RMA_MR_ACCESS;
+		else
+			mr_access |= FT_RMA_MR_ACCESS;
+	}
+
+	return mr_access;
+}
+
 
 
 
