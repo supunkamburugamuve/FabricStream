@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-Wall -g -ggdb -std=gnu++11
-LDFLAGS=-libverbs -pthread -L/N/u/skamburu/projects/fabbuild/fab/lib -lfabric
+LDFLAGS=-libverbs -lrt -pthread -L/N/u/skamburu/projects/fabbuild/fab/lib -lfabric 
 INC=-I/N/u/skamburu/projects/fabbuild/fab/include
 main: main.o utils.o server.o client.o
 	$(CC) $(CFLAGS) main.o utils.o server.o client.o -o main $(LDFLAGS)
