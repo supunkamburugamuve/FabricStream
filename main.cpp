@@ -108,8 +108,13 @@ int main(int argc, char **argv) {
 		ret = client.ExchangeKeys(&remote);
 		if (ret) {
 			printf("Failed to exchange %d\n", ret);
+		} else {
+			printf("Exchanged keys\n");
 		}
-		client.sync();
+		ret = client.sync();
+		if (ret) {
+			printf("Failed to sync\n");
+		}
 	} else {
 		RDMAServer server(&options, hints);
 		server.StartServer();
@@ -117,8 +122,13 @@ int main(int argc, char **argv) {
 		ret = server.ExchangeKeys(&remote);
 		if (ret) {
 			printf("Failed to exchange %d\n", ret);
+		} else {
+			printf("Exchanged keys\n");
 		}
-		server.sync();
+		ret = server.sync();
+		if (ret) {
+			printf("Failed to sync\n");
+		}
 	}
 
 

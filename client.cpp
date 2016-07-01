@@ -330,21 +330,10 @@ int RDMACLient::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 int RDMACLient::sync()
 {
 	int ret;
-
-	if (this->options->dst_addr) {
-		ret = TX(ep, remote_fi_addr, 1, &tx_ctx);
-		if (ret)
-			return ret;
-
-		ret = RX(ep, 1);
-	} else {
-		ret = RX(ep, 1);
-		if (ret)
-			return ret;
-
-		ret = TX(ep, remote_fi_addr, 1, &tx_ctx);
-	}
-
+	ret = TX(ep, remote_fi_addr, 1, &tx_ctx);
+	if (ret)
+		return ret;
+	ret = RX(ep, 1);
 	return ret;
 }
 
