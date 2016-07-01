@@ -119,10 +119,19 @@ int main(int argc, char **argv) {
 		}
 
 		for (int i = 0; i < 100; i++) {
-			client.RMA(options.rma_op, options.transfer_size, &remote);
+			ret = client.RMA(options.rma_op, options.transfer_size, &remote);
+			if (ret) {
+				printf("Failed to RMA \n");
+			}
 		}
-		client.sync();
-		client.Finalize();
+		ret = client.sync();
+		if (ret) {
+			printf("Failed second sync");
+		}
+		ret = client.Finalize();
+		if (ret) {
+			printf("Failed Finalize");
+		}
 	} else {
 		RDMAServer server(&options, hints);
 		server.StartServer();
@@ -138,10 +147,19 @@ int main(int argc, char **argv) {
 			printf("Failed to sync\n");
 		}
 		for (int i = 0; i < 100; i++) {
-			server.RMA(options.rma_op, options.transfer_size, &remote);
+			ret = server.RMA(options.rma_op, options.transfer_size, &remote);
+			if (ret) {
+				printf("Failed to RMA \n");
+			}
 		}
-		server.sync();
-		server.Finalize();
+		ret = server.sync();
+		if (ret) {
+			printf("Failed second sync");
+		}
+		ret = server.Finalize();
+		if (ret) {
+			printf("Failed Finalize");
+		}
 	}
 
     return 0;
