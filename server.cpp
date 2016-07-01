@@ -86,6 +86,49 @@ int timeout = 0;
 		seq++;								\
 	} while (0)
 
+
+int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
+	struct fi_rma_iov *rma_iov;
+	RDMAOptions *opts = this->options;
+	int ret;
+
+	if (opts->dst_addr) {
+		rma_iov = tx_buf + rdma_utils_tx_prefix_size(this->info);
+		rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
+				0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(this->info);
+		rma_iov->key = fi_mr_key(mr);
+		ret = ft_tx(ep, sizeof *rma_iov);
+		if (ret)
+			return ret;
+
+		ret = ft_get_rx_comp(rx_seq);
+		if (ret)
+			return ret;
+
+		rma_iov = rx_buf + rdma_utils_rx_prefix_size(this->info);
+		*peer_iov = *rma_iov;
+		ret = ft_post_rx(ep, rx_size, &rx_ctx);
+	} else {
+		ret = ft_get_rx_comp(rx_seq);
+		if (ret)
+			return ret;
+
+		rma_iov = rx_buf + rdma_utils_rx_prefix_size(this->info);
+		*peer_iov = *rma_iov;
+		ret = ft_post_rx(ep, rx_size, &rx_ctx);
+		if (ret)
+			return ret;
+
+		rma_iov = tx_buf + rdma_utils_tx_prefix_size(this->info);
+		rma_iov->addr = this->info->domain_attr->mr_mode == FI_MR_SCALABLE ?
+				0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(this->info);
+		rma_iov->key = fi_mr_key(mr);
+		ret = ft_tx(ep, sizeof *rma_iov);
+	}
+
+	return ret;
+}
+
 /*
  * Include FI_MSG_PREFIX space in the allocated buffer, and ensure that the
  * buffer is large enough for a control message used to exchange addressing

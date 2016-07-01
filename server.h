@@ -69,6 +69,7 @@ class RDMAServer {
     int AllocateActiveRes(struct fi_info *hints, struct fi_info *fi);
     int InitEp(struct fi_info *fi, struct fi_info *hints);
     int AllocMsgs(void);
+    int ExchangeKeys(struct fi_rma_iov *peer_iov)
 };
 
 #endif
