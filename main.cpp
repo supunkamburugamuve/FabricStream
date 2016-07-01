@@ -11,6 +11,8 @@ using namespace std;
 
 #define FT_PRINT_OPTS_USAGE(opt, desc) fprintf(stderr, " %-20s %s\n", opt, desc);
 
+static struct fi_rma_iov remote;
+
 void rdma_parseinfo(int op, char *optarg, struct fi_info *hints) {
 	switch (op) {
 	case 'n':
@@ -102,10 +104,12 @@ int main(int argc, char **argv) {
 	if (options.dst_addr) {
 		RDMACLient client(&options, hints);
 		client.ClientConnect();
+		client.ExchangeKeys(&remote);
 	} else {
 		RDMAServer server(&options, hints);
 		server.StartServer();
 		server.ServerConnect();
+		server.ExchangeKeys(&remote);
 	}
 
     return 0;

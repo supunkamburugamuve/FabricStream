@@ -15,6 +15,7 @@ class RDMACLient {
 public:
   RDMACLient(RDMAOptions *opts, struct fi_info *hints);
   int ClientConnect(void);
+  int ExchangeKeys(struct fi_rma_iov *peer_iov);
   // free all the resources
   int ShutDown();
 private:
@@ -79,7 +80,7 @@ private:
   int InitEp(struct fi_info *hints, struct fi_info *fi);
   int AllocateActiveRes(struct fi_info *hints, struct fi_info *fi);
   int AllocMsgs(void);
-  int ExchangeKeys(struct fi_rma_iov *peer_iov);
+
   ssize_t PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context* ctx);
   ssize_t PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx);
   ssize_t TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context *ctx);

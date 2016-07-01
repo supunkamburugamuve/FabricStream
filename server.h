@@ -13,6 +13,7 @@ class RDMAServer {
 	RDMAServer(RDMAOptions *opts, struct fi_info *hints) ;
     int StartServer(void);
     int ServerConnect(void);
+    int ExchangeKeys(struct fi_rma_iov *peer_iov);
     // free all the resources
     void ShutDown();
   private:
@@ -75,7 +76,7 @@ class RDMAServer {
     int AllocateActiveRes(struct fi_info *hints, struct fi_info *fi);
     int InitEp(struct fi_info *fi, struct fi_info *hints);
     int AllocMsgs(void);
-    int ExchangeKeys(struct fi_rma_iov *peer_iov);
+
     ssize_t PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context* ctx);
     ssize_t PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx);
     ssize_t TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context *ctx);
