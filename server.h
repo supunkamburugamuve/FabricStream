@@ -74,7 +74,7 @@ class RDMAServer {
     int InitEp(struct fi_info *fi, struct fi_info *hints);
     int AllocMsgs(void);
     int ExchangeKeys(struct fi_rma_iov *peer_iov);
-    ssize_t RDMAServer::PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context* ctx);
+    ssize_t PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context* ctx);
     ssize_t PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx);
     ssize_t TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context *ctx);
     ssize_t RX(struct fid_ep *ep, size_t size);

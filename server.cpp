@@ -304,7 +304,7 @@ int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 	int ret;
 
 	if (options->dst_addr) {
-		rma_iov = tx_buf + rdma_utils_tx_prefix_size(info);
+		rma_iov = (fi_rma_iov *)(tx_buf + rdma_utils_tx_prefix_size(info));
 		rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
 				0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
 		rma_iov->key = fi_mr_key(mr);
@@ -316,7 +316,7 @@ int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 		if (ret)
 			return ret;
 
-		rma_iov = rx_buf + rdma_utils_rx_prefix_size(info);
+		rma_iov = (fi_rma_iov *)(rx_buf + rdma_utils_rx_prefix_size(info));
 		*peer_iov = *rma_iov;
 		ret = PostRX(ep, rx_size, &rx_ctx);
 	} else {
@@ -324,13 +324,13 @@ int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 		if (ret)
 			return ret;
 
-		rma_iov = rx_buf + rdma_utils_rx_prefix_size(info);
+		rma_iov = (fi_rma_iov *)(rx_buf + rdma_utils_rx_prefix_size(info));
 		*peer_iov = *rma_iov;
 		ret = PostRX(ep, rx_size, &rx_ctx);
 		if (ret)
 			return ret;
 
-		rma_iov = tx_buf + rdma_utils_tx_prefix_size(info);
+		rma_iov = (fi_rma_iov *)(tx_buf + rdma_utils_tx_prefix_size(info));
 		rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
 				0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
 		rma_iov->key = fi_mr_key(mr);

@@ -221,7 +221,7 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 
 	// now lets retrieve the available network services
 	// according to hints
-	printf("node=%s service=%s flags=%d\n", node, service, flags);
+	printf("node=%s service=%s flags=%d\n", node, service, (int)flags);
 	int ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, hints, info);
 	if (ret) {
 		printf("Fi_info failed %d\n", ret);
@@ -275,7 +275,7 @@ int rdma_utils_poll_fd(int fd, int timeout) {
 	fds.events = POLLIN;
 	ret = poll(&fds, 1, timeout);
 	if (ret == -1) {
-		printf("poll", -errno);
+		printf("poll %d\n", -errno);
 		ret = -errno;
 	} else if (!ret) {
 		ret = -FI_EAGAIN;

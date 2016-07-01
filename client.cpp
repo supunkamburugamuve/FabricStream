@@ -115,7 +115,7 @@ int RDMACLient::AllocMsgs(void) {
 		ret = fi_mr_reg(domain, buf, buf_size, rdma_utils_caps_to_mr_access(info->caps),
 				0, FT_MR_KEY, 0, &mr, NULL);
 		if (ret) {
-			printf("fi_mr_reg", ret);
+			printf("fi_mr_reg %d\n", ret);
 			return ret;
 		}
 	} else {
