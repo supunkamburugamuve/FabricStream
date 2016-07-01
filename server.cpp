@@ -327,6 +327,27 @@ int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 	return ret;
 }
 
+int RDMAServer::sync()
+{
+	int ret;
+
+	if (this->options->dst_addr) {
+		ret = TX(ep, remote_fi_addr, 1, &tx_ctx);
+		if (ret)
+			return ret;
+
+		ret = RX(ep, 1);
+	} else {
+		ret = RX(ep, 1);
+		if (ret)
+			return ret;
+
+		ret = TX(ep, remote_fi_addr, 1, &tx_ctx);
+	}
+
+	return ret;
+}
+
 /*
  * Include FI_MSG_PREFIX space in the allocated buffer, and ensure that the
  * buffer is large enough for a control message used to exchange addressing

@@ -109,6 +109,7 @@ int main(int argc, char **argv) {
 		if (ret) {
 			printf("Failed to exchange %d\n", ret);
 		}
+		client.sync();
 	} else {
 		RDMAServer server(&options, hints);
 		server.StartServer();
@@ -117,7 +118,9 @@ int main(int argc, char **argv) {
 		if (ret) {
 			printf("Failed to exchange %d\n", ret);
 		}
+		server.sync();
 	}
+
 
     return 0;
 }

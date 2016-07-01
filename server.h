@@ -14,6 +14,7 @@ class RDMAServer {
     int StartServer(void);
     int ServerConnect(void);
     int ExchangeKeys(struct fi_rma_iov *peer_iov);
+    int sync();
     // free all the resources
     void ShutDown();
   private:
