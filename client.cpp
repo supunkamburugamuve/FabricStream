@@ -306,17 +306,24 @@ int RDMACLient::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 			0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
 	rma_iov->key = fi_mr_key(mr);
 	ret = TX(ep, remote_fi_addr, sizeof *rma_iov, &tx_ctx);
-	if (ret)
+	if (ret) {
+		printf("Failed to TX\n");
 		return ret;
+	}
 
 	ret = GetRXComp(rx_seq);
-	if (ret)
+	if (ret) {
+		printf("Failed to get rx completion\n");
 		return ret;
+	}
 
 	rma_iov = (fi_rma_iov *)(rx_buf + rdma_utils_rx_prefix_size(info));
 	*peer_iov = *rma_iov;
 	ret = PostRX(ep, rx_size, &rx_ctx);
-
+	if (ret) {
+		printf("Failed to post RX\n");
+		return ret;
+	}
 	return ret;
 }
 
