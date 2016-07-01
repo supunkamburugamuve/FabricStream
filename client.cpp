@@ -17,6 +17,8 @@
 #include "rdma_fabric.h"
 #include "utils.h"
 
+int timeout = -1;
+
 int RDMACLient::ShutDown(void) {
 	return 0;
 }

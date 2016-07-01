@@ -57,7 +57,7 @@ int RDMAServer::OpenFabric(void) {
 	return 0;
 }
 
-int timeout = 0;
+int timeout = -1;
 
 #define FT_POST(post_fn, comp_fn, seq, op_str, ...)				\
 	do {									\
