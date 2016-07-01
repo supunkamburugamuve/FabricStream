@@ -15,6 +15,11 @@ class RDMAServer {
     int ServerConnect(void);
     int ExchangeKeys(struct fi_rma_iov *peer_iov);
     int sync();
+    ssize_t PostRMA(enum rdma_rma_opcodes op, size_t size,
+    		struct fi_rma_iov *remote);
+    ssize_t RMA(enum rdma_rma_opcodes op, size_t size,
+			struct fi_rma_iov *remote);
+    int Finalize(void);
     // free all the resources
     void ShutDown();
   private:

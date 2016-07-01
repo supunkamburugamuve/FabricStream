@@ -16,6 +16,11 @@ public:
   RDMACLient(RDMAOptions *opts, struct fi_info *hints);
   int ClientConnect(void);
   int ExchangeKeys(struct fi_rma_iov *peer_iov);
+  int Finalize(void);
+  ssize_t PostRMA(enum rdma_rma_opcodes op, size_t size,
+      		struct fi_rma_iov *remote);
+      ssize_t RMA(enum rdma_rma_opcodes op, size_t size,
+  			struct fi_rma_iov *remote);
   int sync();
   // free all the resources
   int ShutDown();

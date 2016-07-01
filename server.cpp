@@ -297,6 +297,55 @@ ssize_t RDMAServer::RX(struct fid_ep *ep, size_t size) {
 	return ret;
 }
 
+ssize_t RDMAServer::PostRMA(enum rdma_rma_opcodes op, size_t size,
+		struct fi_rma_iov *remote)
+{
+	switch (op) {
+	case FT_RMA_WRITE:
+		FT_POST(fi_write, GetTXComp, tx_seq, "fi_write", ep, tx_buf,
+				options->transfer_size, fi_mr_desc(mr), remote_fi_addr,
+				remote->addr, remote->key, ep);
+		break;
+	case FT_RMA_WRITEDATA:
+		FT_POST(fi_writedata, GetTXComp, tx_seq, "fi_writedata", ep,
+				tx_buf, options->transfer_size, fi_mr_desc(mr),
+				remote_cq_data,	remote_fi_addr,	remote->addr,
+				remote->key, ep);
+		break;
+	case FT_RMA_READ:
+		FT_POST(fi_read, GetTXComp, tx_seq, "fi_read", ep, rx_buf,
+				options->transfer_size, fi_mr_desc(mr), remote_fi_addr,
+				remote->addr, remote->key, ep);
+		break;
+	default:
+		printf("Unknown RMA op type\n");
+		return EXIT_FAILURE;
+	}
+
+	return 0;
+}
+
+ssize_t RDMAServer::RMA(enum rdma_rma_opcodes op, size_t size,
+		struct fi_rma_iov *remote) {
+	int ret;
+
+	ret = PostRMA(op, size, remote);
+	if (ret)
+		return ret;
+
+	if (op == FT_RMA_WRITEDATA) {
+		ret = RX(ep, 0);
+		if (ret)
+			return ret;
+	}
+
+	ret = GetRXComp(tx_seq);
+	if (ret)
+		return ret;
+
+	return 0;
+}
+
 int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 	struct fi_rma_iov *rma_iov;
 	int ret;
@@ -327,8 +376,7 @@ int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 	return ret;
 }
 
-int RDMAServer::sync()
-{
+int RDMAServer::sync() {
 	int ret;
 	ret = RX(ep, 1);
 	if (ret)
@@ -336,6 +384,58 @@ int RDMAServer::sync()
 
 	ret = TX(ep, remote_fi_addr, 1, &tx_ctx);
 	return ret;
+}
+
+int RDMAServer::Finalize(void) {
+	struct iovec iov;
+	int ret;
+	struct fi_context ctx;
+	void *desc = fi_mr_desc(mr);
+
+	strcpy((char *)(tx_buf + rdma_utils_tx_prefix_size(info)), "fin");
+	iov.iov_base = tx_buf;
+	iov.iov_len = 4 + rdma_utils_tx_prefix_size(info);
+
+	if (info_hints->caps & FI_TAGGED) {
+		struct fi_msg_tagged tmsg;
+
+		memset(&tmsg, 0, sizeof tmsg);
+		tmsg.msg_iov = &iov;
+		tmsg.desc = &desc;
+		tmsg.iov_count = 1;
+		tmsg.addr = remote_fi_addr;
+		tmsg.tag = tx_seq;
+		tmsg.ignore = 0;
+		tmsg.context = &ctx;
+
+		ret = fi_tsendmsg(ep, &tmsg, FI_INJECT | FI_TRANSMIT_COMPLETE);
+	} else {
+		struct fi_msg msg;
+
+		memset(&msg, 0, sizeof msg);
+		msg.msg_iov = &iov;
+		msg.desc = &desc;
+		msg.iov_count = 1;
+		msg.addr = remote_fi_addr;
+		msg.context = &ctx;
+
+		ret = fi_sendmsg(ep, &msg, FI_INJECT | FI_TRANSMIT_COMPLETE);
+	}
+	if (ret) {
+		printf("transmit %d\n", ret);
+		return ret;
+	}
+
+
+	ret = GetTXComp(++tx_seq);
+	if (ret)
+		return ret;
+
+	ret = GetRXComp(rx_seq);
+	if (ret)
+		return ret;
+
+	return 0;
 }
 
 /*

@@ -56,6 +56,7 @@ public:
   char *fname;
   int options;
   char *av_name;
+  int transfer_size;
   /**
    * Computation method, spin, wait or wait-set
    */
