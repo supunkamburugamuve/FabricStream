@@ -100,7 +100,9 @@ size_t rdma_utils_tx_prefix_size(struct fi_info *fi);
 uint64_t rdma_utils_init_cq_data(struct fi_info *info);
 uint64_t rdma_utils_caps_to_mr_access(uint64_t caps);
 int rdma_utils_check_opts(RDMAOptions *opts, uint64_t flags) ;
-
+int rdma_utils_poll_fd(int fd, int timeout);
+int rdma_utils_cq_readerr(struct fid_cq *cq);
+int rdma_utils_check_buf(void *buf, int size);
 /**
  * Some testing functions
  */
@@ -109,7 +111,5 @@ static const char integ_alphabet[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEF
 static const int integ_alphabet_length = (sizeof(integ_alphabet)/sizeof(*integ_alphabet)) - 1;
 
 void rdma_utils_fill_buf(void *buf, int size);
-int rdma_utils_poll_fd(int fd, int timeout);
-int rdma_utils_cq_readerr(struct fid_cq *cq);
 
 #endif

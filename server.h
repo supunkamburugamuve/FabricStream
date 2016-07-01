@@ -63,6 +63,8 @@ class RDMAServer {
     struct fid_mr no_mr;
 
     uint64_t tx_seq, rx_seq, tx_cq_cntr, rx_cq_cntr;
+
+    fi_addr_t remote_fi_addr;
     /**
      * Private methods
      */
@@ -72,9 +74,10 @@ class RDMAServer {
     int InitEp(struct fi_info *fi, struct fi_info *hints);
     int AllocMsgs(void);
     int ExchangeKeys(struct fi_rma_iov *peer_iov);
-    ssize_t PostTX(struct fid_ep *ep, size_t size, struct fi_context* ctx);
+    ssize_t RDMAServer::PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context* ctx);
     ssize_t PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx);
-    ssize_t TX(struct fid_ep *ep, size_t size);
+    ssize_t TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context *ctx);
+    ssize_t RX(struct fid_ep *ep, size_t size);
     int GetTXComp(uint64_t total);
     int GetRXComp(uint64_t total);
     int GetCQComp(struct fid_cq *cq, uint64_t *cur,

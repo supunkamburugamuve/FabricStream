@@ -235,26 +235,27 @@ int RDMAServer::GetTXComp(uint64_t total) {
 	return ret;
 }
 
-ssize_t RDMAServer::PostTX(struct fid_ep *ep, size_t size, struct fi_context* ctx) {
+ssize_t RDMAServer::PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context* ctx) {
 	if (info_hints->caps & FI_TAGGED) {
 		FT_POST(fi_tsend, GetTXComp, tx_seq, "transmit", ep,
-				tx_buf, size + rdma_utils_tx_prefix_size(this->info), fi_mr_desc(mr),
+				tx_buf, size + rdma_utils_tx_prefix_size(info), fi_mr_desc(mr),
 				fi_addr, tx_seq, ctx);
 	} else {
 		FT_POST(fi_send, GetTXComp, tx_seq, "transmit", ep,
-				tx_buf,	size + rdma_utils_tx_prefix_size(this->info), fi_mr_desc(mr),
+				tx_buf,	size + rdma_utils_tx_prefix_size(info), fi_mr_desc(mr),
 				fi_addr, ctx);
 	}
 	return 0;
 }
 
-ssize_t RDMAServer::TX(struct fid_ep *ep, size_t size) {
+ssize_t RDMAServer::TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context *ctx)
+{
 	ssize_t ret;
 
-	if (rdma_utils_check_opts(this->options, FT_OPT_VERIFY_DATA | FT_OPT_ACTIVE))
-		rdma_utils_fill_buf((char *) tx_buf + rdma_utils_tx_prefix_size(this->info), size);
+	if (rdma_utils_check_opts(options, FT_OPT_VERIFY_DATA | FT_OPT_ACTIVE))
+		rdma_utils_fill_buf((char *) tx_buf + rdma_utils_tx_prefix_size(info), size);
 
-	ret = PostTX(ep, size, &tx_ctx);
+	ret = PostTX(ep, fi_addr, size, ctx);
 	if (ret)
 		return ret;
 
@@ -262,30 +263,52 @@ ssize_t RDMAServer::TX(struct fid_ep *ep, size_t size) {
 	return ret;
 }
 
-ssize_t RDMAServer::PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx) {
+ssize_t RDMAServer::PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx)
+{
 	if (info_hints->caps & FI_TAGGED) {
 		FT_POST(fi_trecv, GetRXComp, rx_seq, "receive", ep, rx_buf,
-				MAX(size, FT_MAX_CTRL_MSG) + rdma_utils_rx_prefix_size(this->info),
+				MAX(size, FT_MAX_CTRL_MSG) + rdma_utils_rx_prefix_size(info),
 				fi_mr_desc(mr), 0, rx_seq, 0, ctx);
 	} else {
 		FT_POST(fi_recv, GetRXComp, rx_seq, "receive", ep, rx_buf,
-				MAX(size, FT_MAX_CTRL_MSG) + rdma_utils_rx_prefix_size(this->info),
+				MAX(size, FT_MAX_CTRL_MSG) + rdma_utils_rx_prefix_size(info),
 				fi_mr_desc(mr),	0, ctx);
 	}
 	return 0;
 }
 
+ssize_t RDMAServer::RX(struct fid_ep *ep, size_t size) {
+	ssize_t ret;
+
+	ret = GetRXComp(rx_seq);
+	if (ret)
+		return ret;
+
+	if (rdma_utils_check_opts(options, FT_OPT_VERIFY_DATA | FT_OPT_ACTIVE)) {
+		ret = rdma_utils_check_buf((char *) rx_buf + rdma_utils_rx_prefix_size(info), size);
+		if (ret)
+			return ret;
+	}
+	/* TODO: verify CQ data, if available */
+
+	/* Ignore the size arg. Post a buffer large enough to handle all message
+	 * sizes. ft_sync() makes use of ft_rx() and gets called in tests just before
+	 * message size is updated. The recvs posted are always for the next incoming
+	 * message */
+	ret = PostRX(ep, rx_size, &rx_ctx);
+	return ret;
+}
+
 int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 	struct fi_rma_iov *rma_iov;
-	RDMAOptions *opts = this->options;
 	int ret;
 
-	if (opts->dst_addr) {
-		rma_iov = tx_buf + rdma_utils_tx_prefix_size(this->info);
+	if (options->dst_addr) {
+		rma_iov = tx_buf + rdma_utils_tx_prefix_size(info);
 		rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
-				0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(this->info);
+				0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
 		rma_iov->key = fi_mr_key(mr);
-		ret = TX(ep, sizeof *rma_iov);
+		ret = TX(ep, remote_fi_addr, sizeof *rma_iov, &tx_ctx);
 		if (ret)
 			return ret;
 
@@ -293,7 +316,7 @@ int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 		if (ret)
 			return ret;
 
-		rma_iov = rx_buf + rdma_utils_rx_prefix_size(this->info);
+		rma_iov = rx_buf + rdma_utils_rx_prefix_size(info);
 		*peer_iov = *rma_iov;
 		ret = PostRX(ep, rx_size, &rx_ctx);
 	} else {
@@ -301,17 +324,17 @@ int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 		if (ret)
 			return ret;
 
-		rma_iov = rx_buf + rdma_utils_rx_prefix_size(this->info);
+		rma_iov = rx_buf + rdma_utils_rx_prefix_size(info);
 		*peer_iov = *rma_iov;
 		ret = PostRX(ep, rx_size, &rx_ctx);
 		if (ret)
 			return ret;
 
-		rma_iov = tx_buf + rdma_utils_tx_prefix_size(this->info);
-		rma_iov->addr = this->info->domain_attr->mr_mode == FI_MR_SCALABLE ?
-				0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(this->info);
+		rma_iov = tx_buf + rdma_utils_tx_prefix_size(info);
+		rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
+				0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
 		rma_iov->key = fi_mr_key(mr);
-		ret = TX(ep, sizeof *rma_iov);
+		ret = TX(ep, remote_fi_addr, sizeof *rma_iov, &tx_ctx);
 	}
 
 	return ret;
@@ -686,6 +709,8 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 
 	this->av_attr.type = FI_AV_MAP;
 	this->av_attr.count = 1;
+
+	this->remote_fi_addr = FI_ADDR_UNSPEC;
 }
 
 
