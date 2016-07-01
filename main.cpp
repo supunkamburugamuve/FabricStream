@@ -76,6 +76,7 @@ void rdma_parse_addr_opts(int op, char *optarg, RDMAOptions *opts) {
 
 int main(int argc, char **argv) {
 	int op;
+	int ret = 0;
 	RDMAOptions options;
 	struct fi_info *hints = fi_allocinfo();
     // parse the options
@@ -104,12 +105,18 @@ int main(int argc, char **argv) {
 	if (options.dst_addr) {
 		RDMACLient client(&options, hints);
 		client.ClientConnect();
-		client.ExchangeKeys(&remote);
+		ret = client.ExchangeKeys(&remote);
+		if (ret) {
+			printf("Failed to exchange %d\n", ret);
+		}
 	} else {
 		RDMAServer server(&options, hints);
 		server.StartServer();
 		server.ServerConnect();
-		server.ExchangeKeys(&remote);
+		ret = server.ExchangeKeys(&remote);
+		if (ret) {
+			printf("Failed to exchange %d\n", ret);
+		}
 	}
 
     return 0;
