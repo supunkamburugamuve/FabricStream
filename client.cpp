@@ -17,8 +17,6 @@
 #include "rdma_fabric.h"
 #include "utils.h"
 
-int timeout = -1;
-
 int RDMACLient::ShutDown(void) {
 	return 0;
 }
@@ -661,6 +659,11 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 	// initialize this attribute, search weather this is correct
 	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
 
+	this->tx_seq = 0;
+	this->rx_seq = 0;
+	this->tx_cq_cntr = 0;
+	this->rx_cq_cntr = 0;
+
 	// get the information
 	// rdma_utils_get_info(this->options, hints, &this->info);
 
@@ -670,4 +673,8 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 
 	this->av_attr.type = FI_AV_MAP;
 	this->av_attr.count = 1;
+
+	this->remote_fi_addr = FI_ADDR_UNSPEC;
+
+	this->timeout = -1;
 }

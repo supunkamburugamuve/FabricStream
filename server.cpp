@@ -57,8 +57,6 @@ int RDMAServer::OpenFabric(void) {
 	return 0;
 }
 
-int timeout = -1;
-
 #define FT_POST(post_fn, comp_fn, seq, op_str, ...)				\
 	do {									\
 		int timeout_save;						\
@@ -697,6 +695,12 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	this->cq_attr = {};
 	this->cntr_attr = {};
 	this->av_attr = {};
+
+	this->tx_seq = 0;
+	this->rx_seq = 0;
+	this->tx_cq_cntr = 0;
+	this->rx_cq_cntr = 0;
+
 	// initialize this attribute, search weather this is correct
 	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
 
@@ -711,6 +715,8 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	this->av_attr.count = 1;
 
 	this->remote_fi_addr = FI_ADDR_UNSPEC;
+
+	this->timeout = -1;
 }
 
 

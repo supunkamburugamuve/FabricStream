@@ -65,6 +65,8 @@ class RDMAServer {
     uint64_t tx_seq, rx_seq, tx_cq_cntr, rx_cq_cntr;
 
     fi_addr_t remote_fi_addr;
+
+    int timeout;
     /**
      * Private methods
      */
