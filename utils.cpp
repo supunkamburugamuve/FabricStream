@@ -17,6 +17,10 @@
 
 char default_port[8] = "9228";
 
+#define FT_CQ_ERR(cq, entry, buf, len) \
+	FT_ERR("cq_readerr: %s", fi_cq_strerror(cq, entry.prov_errno, \
+				entry.err_data, buf, len))
+
 RDMAOptions::RDMAOptions() {
 	this->dst_addr = NULL;
 	this->dst_port = NULL;
@@ -258,6 +262,59 @@ uint64_t rdma_utils_caps_to_mr_access(uint64_t caps) {
 
 	return mr_access;
 }
+
+int rdma_utils_check_opts(RDMAOptions *opts, uint64_t flags) {
+	return (opts->options & flags) == flags;
+}
+
+int rdma_utils_poll_fd(int fd, int timeout) {
+	struct pollfd fds;
+	int ret;
+
+	fds.fd = fd;
+	fds.events = POLLIN;
+	ret = poll(&fds, 1, timeout);
+	if (ret == -1) {
+		printf("poll", -errno);
+		ret = -errno;
+	} else if (!ret) {
+		ret = -FI_EAGAIN;
+	} else {
+		ret = 0;
+	}
+	return ret;
+}
+
+int rdma_utils_cq_readerr(struct fid_cq *cq){
+	struct fi_cq_err_entry cq_err;
+	int ret;
+
+	ret = fi_cq_readerr(cq, &cq_err, 0);
+	if (ret < 0) {
+		printf("fi_cq_readerr %d\n", ret);
+	} else {
+		printf("%s\n", fi_cq_strerror(cq, cq_err.prov_errno,
+				cq_err.err_data, NULL, 0));
+		ret = -cq_err.err;
+	}
+	return ret;
+}
+
+void rdma_utils_fill_buf(void *buf, int size) {
+	char *msg_buf;
+	int msg_index;
+	static unsigned int iter = 0;
+	int i;
+
+	msg_index = ((iter++)*INTEG_SEED) % integ_alphabet_length;
+	msg_buf = (char *)buf;
+	for (i = 0; i < size; i++) {
+		msg_buf[i] = integ_alphabet[msg_index++];
+		if (msg_index >= integ_alphabet_length)
+			msg_index = 0;
+	}
+}
+
 
 
 

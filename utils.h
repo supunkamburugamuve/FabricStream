@@ -99,5 +99,17 @@ size_t rdma_utils_rx_prefix_size(struct fi_info *fi);
 size_t rdma_utils_tx_prefix_size(struct fi_info *fi);
 uint64_t rdma_utils_init_cq_data(struct fi_info *info);
 uint64_t rdma_utils_caps_to_mr_access(uint64_t caps);
+int rdma_utils_check_opts(RDMAOptions *opts, uint64_t flags) ;
+
+/**
+ * Some testing functions
+ */
+#define INTEG_SEED 7
+static const char integ_alphabet[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static const int integ_alphabet_length = (sizeof(integ_alphabet)/sizeof(*integ_alphabet)) - 1;
+
+void rdma_utils_fill_buf(void *buf, int size);
+int rdma_utils_poll_fd(int fd, int timeout);
+int rdma_utils_cq_readerr(struct fid_cq *cq);
 
 #endif

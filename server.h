@@ -61,6 +61,8 @@ class RDMAServer {
     uint64_t remote_cq_data;
     struct fid_mr *mr;
     struct fid_mr no_mr;
+
+    uint64_t tx_seq, rx_seq, tx_cq_cntr, rx_cq_cntr;
     /**
      * Private methods
      */
@@ -69,7 +71,20 @@ class RDMAServer {
     int AllocateActiveRes(struct fi_info *hints, struct fi_info *fi);
     int InitEp(struct fi_info *fi, struct fi_info *hints);
     int AllocMsgs(void);
-    int ExchangeKeys(struct fi_rma_iov *peer_iov)
+    int ExchangeKeys(struct fi_rma_iov *peer_iov);
+    ssize_t PostTX(struct fid_ep *ep, size_t size, struct fi_context* ctx);
+    ssize_t PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx);
+    ssize_t TX(struct fid_ep *ep, size_t size);
+    int GetTXComp(uint64_t total);
+    int GetRXComp(uint64_t total);
+    int GetCQComp(struct fid_cq *cq, uint64_t *cur,
+    			  uint64_t total, int timeout);
+    int FDWaitForComp(struct fid_cq *cq, uint64_t *cur,
+    			    uint64_t total, int timeout);
+    int WaitForCompletion(struct fid_cq *cq, uint64_t *cur,
+    			    uint64_t total, int timeout);
+    int SpinForCompletion(struct fid_cq *cq, uint64_t *cur,
+    			    uint64_t total, int timeout);
 };
 
 #endif
