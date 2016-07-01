@@ -57,6 +57,7 @@ public:
   int options;
   char *av_name;
   int transfer_size;
+  rdma_rma_opcodes rma_op;
   /**
    * Computation method, spin, wait or wait-set
    */

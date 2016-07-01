@@ -78,6 +78,8 @@ int main(int argc, char **argv) {
 	int op;
 	int ret = 0;
 	RDMAOptions options;
+	options.transfer_size = 100;
+	options.rma_op = FT_RMA_WRITE;
 	struct fi_info *hints = fi_allocinfo();
     // parse the options
     while ((op = getopt(argc, argv, "ho:" ADDR_OPTS INFO_OPTS)) != -1) {
@@ -115,6 +117,12 @@ int main(int argc, char **argv) {
 		if (ret) {
 			printf("Failed to sync\n");
 		}
+
+		for (int i = 0; i < 100; i++) {
+			client.RMA(options.rma_op, options.transfer_size, &remote);
+		}
+		client.sync();
+		client.Finalize();
 	} else {
 		RDMAServer server(&options, hints);
 		server.StartServer();
@@ -129,8 +137,12 @@ int main(int argc, char **argv) {
 		if (ret) {
 			printf("Failed to sync\n");
 		}
+		for (int i = 0; i < 100; i++) {
+			server.RMA(options.rma_op, options.transfer_size, &remote);
+		}
+		server.sync();
+		server.Finalize();
 	}
-
 
     return 0;
 }
