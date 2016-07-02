@@ -149,6 +149,8 @@ int main(int argc, char **argv) {
 		ret = client.sync();
 		if (ret) {
 			printf("Failed to sync\n");
+		} else {
+			printf("synced\n");
 		}
 
 		for (int i = 0; i < 100; i++) {
