@@ -628,7 +628,7 @@ int RDMAServer::StartServer(void) {
 	return 0;
 }
 
-int RDMACLient::InitEp(struct fi_info *hints, struct fi_info *fi) {
+int RDMAServer::InitEp(struct fi_info *hints, struct fi_info *fi) {
 	int flags, ret;
 
 	printf("Init EP\n");
