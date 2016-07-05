@@ -133,9 +133,9 @@ int main(int argc, char **argv) {
     	printf("dst addr: %s\n", options.dst_addr);
     }
 
-    hints->ep_attr->type = FI_EP_MSG;
+	hints->ep_attr->type = FI_EP_MSG;
 	hints->caps = FI_MSG | FI_RMA;
-	hints->mode = FI_CONTEXT | FI_LOCAL_MR | FI_RX_CQ_DATA;
+	hints->mode = FI_LOCAL_MR | FI_RX_CQ_DATA;
 
 	if (options.dst_addr) {
 		RDMACLient client(&options, hints);
