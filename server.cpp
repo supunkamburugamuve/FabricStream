@@ -367,6 +367,7 @@ int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 		printf("Failed to TX\n");
 		return ret;
 	}
+	printf("Key %lu %lu %lu\n", peer_iov->addr, peer_iov->key, peer_iov->len);
 	return ret;
 }
 
