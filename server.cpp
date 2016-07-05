@@ -756,12 +756,12 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	this->options = opts;
 	this->info = NULL;
 	this->info_pep = NULL;
+	this->info_hints = NULL;
 
 	this->txcq = NULL;
 	this->rxcq = NULL;
 	this->txcntr = NULL;
 	this->rxcntr = NULL;
-	this->info_pep = NULL;
 	this->fabric = NULL;
 	this->eq = NULL;
 	this->domain = NULL;
@@ -792,11 +792,15 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	this->cq_attr = {};
 	this->cntr_attr = {};
 	this->av_attr = {};
+	this->tx_ctx = {};
+	this->rx_ctx = {};
 
 	this->tx_seq = 0;
 	this->rx_seq = 0;
 	this->tx_cq_cntr = 0;
 	this->rx_cq_cntr = 0;
+
+	this->ft_skip_mr = 0;
 
 	// initialize this attribute, search weather this is correct
 	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;

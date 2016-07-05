@@ -715,12 +715,12 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 	this->options = opts;
 	this->info = NULL;
 	this->info_pep = NULL;
+	this->info_hints = NULL;
 
 	this->txcq = NULL;
 	this->rxcq = NULL;
 	this->txcntr = NULL;
 	this->rxcntr = NULL;
-	this->info_pep = NULL;
 	this->fabric = NULL;
 	this->eq = NULL;
 	this->domain = NULL;
@@ -731,12 +731,12 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 	this->mr = NULL;
 	this->no_mr = {};
 
+	this->rx_fd = -1;
+	this->tx_fd = -1;
+
 	this->tx_buf = NULL;
 	this->buf = NULL;
 	this->rx_buf = NULL;
-
-	this->rx_fd = -1;
-	this->tx_fd = -1;
 
 	this->buf_size = 0;
 	this->tx_size = 0;
@@ -751,13 +751,18 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 	this->cq_attr = {};
 	this->cntr_attr = {};
 	this->av_attr = {};
-	// initialize this attribute, search weather this is correct
-	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
+	this->tx_ctx = {};
+	this->rx_ctx = {};
 
 	this->tx_seq = 0;
 	this->rx_seq = 0;
 	this->tx_cq_cntr = 0;
 	this->rx_cq_cntr = 0;
+
+	this->ft_skip_mr = 0;
+
+	// initialize this attribute, search weather this is correct
+	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
 
 	// get the information
 	// rdma_utils_get_info(this->options, hints, &this->info);
