@@ -35,7 +35,7 @@ class RDMAServer {
     // the fabric
     struct fid_fabric *fabric;
     // event queue attribute
-    struct fi_eq_attr eq_attr = {};
+    struct fi_eq_attr eq_attr;
     // the event queue to listen on
     struct fid_eq *eq;
     // fabric domain we are working with
@@ -47,9 +47,9 @@ class RDMAServer {
     // address vector
     struct fid_av *av;
 
-    struct fi_cq_attr cq_attr = {};
-    struct fi_cntr_attr cntr_attr = {};
-    struct fi_av_attr av_attr = {};
+    struct fi_cq_attr cq_attr;
+    struct fi_cntr_attr cntr_attr;
+    struct fi_av_attr av_attr;
 
     struct fid_cq *txcq, *rxcq;
     struct fid_cntr *txcntr, *rxcntr;

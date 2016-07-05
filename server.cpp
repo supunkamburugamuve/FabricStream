@@ -88,8 +88,7 @@ int RDMAServer::OpenFabric(void) {
  * fi_cq_err_entry can be cast to any CQ entry format.
  */
 int RDMAServer::SpinForCompletion(struct fid_cq *cq, uint64_t *cur,
-			    uint64_t total, int timeout)
-{
+			    uint64_t total, int timeout) {
 	struct fi_cq_err_entry comp;
 	struct timespec a, b;
 	int ret;
@@ -122,8 +121,7 @@ int RDMAServer::SpinForCompletion(struct fid_cq *cq, uint64_t *cur,
  * fi_cq_err_entry can be cast to any CQ entry format.
  */
 int RDMAServer::WaitForCompletion(struct fid_cq *cq, uint64_t *cur,
-			    uint64_t total, int timeout)
-{
+			    uint64_t total, int timeout) {
 	struct fi_cq_err_entry comp;
 	int ret;
 
@@ -142,8 +140,7 @@ int RDMAServer::WaitForCompletion(struct fid_cq *cq, uint64_t *cur,
  * fi_cq_err_entry can be cast to any CQ entry format.
  */
 int RDMAServer::FDWaitForComp(struct fid_cq *cq, uint64_t *cur,
-			    uint64_t total, int timeout)
-{
+			    uint64_t total, int timeout) {
 	struct fi_cq_err_entry comp;
 	struct fid *fids[1];
 	int fd, ret;
@@ -246,8 +243,7 @@ ssize_t RDMAServer::PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, st
 	return 0;
 }
 
-ssize_t RDMAServer::TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context *ctx)
-{
+ssize_t RDMAServer::TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context *ctx) {
 	ssize_t ret;
 
 	if (rdma_utils_check_opts(options, FT_OPT_VERIFY_DATA | FT_OPT_ACTIVE))
@@ -261,8 +257,7 @@ ssize_t RDMAServer::TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct
 	return ret;
 }
 
-ssize_t RDMAServer::PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx)
-{
+ssize_t RDMAServer::PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx) {
 	if (info_hints->caps & FI_TAGGED) {
 		FT_POST(fi_trecv, GetRXComp, rx_seq, "receive", ep, rx_buf,
 				MAX(size, FT_MAX_CTRL_MSG) + rdma_utils_rx_prefix_size(info),
@@ -298,8 +293,7 @@ ssize_t RDMAServer::RX(struct fid_ep *ep, size_t size) {
 }
 
 ssize_t RDMAServer::PostRMA(enum rdma_rma_opcodes op, size_t size,
-		struct fi_rma_iov *remote)
-{
+		struct fi_rma_iov *remote) {
 	switch (op) {
 	case FT_RMA_WRITE:
 		FT_POST(fi_write, GetTXComp, tx_seq, "fi_write", ep, tx_buf,
@@ -777,6 +771,9 @@ RDMAServer::RDMAServer(RDMAOptions *opts, struct fi_info *hints) {
 	this->av = NULL;
 	this->mr = NULL;
 	this->no_mr = {};
+
+	this->rx_fd = -1;
+	this->tx_fd = -1;
 
 	this->tx_buf = NULL;
 	this->buf = NULL;

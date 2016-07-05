@@ -89,8 +89,7 @@ int RDMACLient::OpenFabric2(void) {
  * fi_cq_err_entry can be cast to any CQ entry format.
  */
 int RDMACLient::SpinForCompletion(struct fid_cq *cq, uint64_t *cur,
-			    uint64_t total, int timeout)
-{
+			    uint64_t total, int timeout) {
 	struct fi_cq_err_entry comp;
 	struct timespec a, b;
 	int ret;
@@ -123,8 +122,7 @@ int RDMACLient::SpinForCompletion(struct fid_cq *cq, uint64_t *cur,
  * fi_cq_err_entry can be cast to any CQ entry format.
  */
 int RDMACLient::WaitForCompletion(struct fid_cq *cq, uint64_t *cur,
-			    uint64_t total, int timeout)
-{
+			    uint64_t total, int timeout) {
 	struct fi_cq_err_entry comp;
 	int ret;
 
@@ -143,8 +141,7 @@ int RDMACLient::WaitForCompletion(struct fid_cq *cq, uint64_t *cur,
  * fi_cq_err_entry can be cast to any CQ entry format.
  */
 int RDMACLient::FDWaitForComp(struct fid_cq *cq, uint64_t *cur,
-			    uint64_t total, int timeout)
-{
+			    uint64_t total, int timeout) {
 	struct fi_cq_err_entry comp;
 	struct fid *fids[1];
 	int fd, ret;
@@ -247,8 +244,7 @@ ssize_t RDMACLient::PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, st
 	return 0;
 }
 
-ssize_t RDMACLient::TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context *ctx)
-{
+ssize_t RDMACLient::TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context *ctx) {
 	ssize_t ret;
 
 	if (rdma_utils_check_opts(options, FT_OPT_VERIFY_DATA | FT_OPT_ACTIVE))
@@ -262,8 +258,7 @@ ssize_t RDMACLient::TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct
 	return ret;
 }
 
-ssize_t RDMACLient::PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx)
-{
+ssize_t RDMACLient::PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx) {
 	if (info_hints->caps & FI_TAGGED) {
 		FT_POST(fi_trecv, GetRXComp, rx_seq, "receive", ep, rx_buf,
 				MAX(size, FT_MAX_CTRL_MSG) + rdma_utils_rx_prefix_size(info),
@@ -327,8 +322,7 @@ int RDMACLient::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 	return ret;
 }
 
-int RDMACLient::sync()
-{
+int RDMACLient::sync() {
 	int ret;
 	ret = TX(ep, remote_fi_addr, 1, &tx_ctx);
 	if (ret)
@@ -390,8 +384,7 @@ int RDMACLient::Finalize(void) {
 }
 
 ssize_t RDMACLient::PostRMA(enum rdma_rma_opcodes op, size_t size,
-		struct fi_rma_iov *remote)
-{
+		struct fi_rma_iov *remote) {
 	switch (op) {
 	case FT_RMA_WRITE:
 		FT_POST(fi_write, GetTXComp, tx_seq, "fi_write", ep, tx_buf,
@@ -741,6 +734,9 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 	this->tx_buf = NULL;
 	this->buf = NULL;
 	this->rx_buf = NULL;
+
+	this->rx_fd = -1;
+	this->tx_fd = -1;
 
 	this->buf_size = 0;
 	this->tx_size = 0;
