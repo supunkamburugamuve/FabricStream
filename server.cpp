@@ -358,7 +358,7 @@ int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 		printf("Failed to post RX\n");
 		return ret;
 	}
-    printf("domain %d\n", info->domain_attr->mr_mode);
+    printf("domain %d   rx_buf %d\n", info->domain_attr->mr_mode, (uintptr_t) rx_buf);
 	rma_iov = (fi_rma_iov *)(static_cast<char *>(tx_buf) + rdma_utils_tx_prefix_size(info));
 	rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
 			0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
