@@ -296,7 +296,7 @@ ssize_t RDMACLient::RX(struct fid_ep *ep, size_t size) {
 int RDMACLient::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 	struct fi_rma_iov *rma_iov;
 	int ret;
-	rma_iov = (fi_rma_iov *)(tx_buf + rdma_utils_tx_prefix_size(info));
+	rma_iov = (fi_rma_iov *)(static_cast<char *>(tx_buf) + rdma_utils_tx_prefix_size(info));
 	rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
 			0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
 	rma_iov->key = fi_mr_key(mr);
@@ -312,7 +312,7 @@ int RDMACLient::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 		return ret;
 	}
 
-	rma_iov = (fi_rma_iov *)(rx_buf + rdma_utils_rx_prefix_size(info));
+	rma_iov = (fi_rma_iov *)(static_cast<char *>(rx_buf) + rdma_utils_rx_prefix_size(info));
 	*peer_iov = *rma_iov;
 	ret = PostRX(ep, rx_size, &rx_ctx);
 	if (ret) {
