@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
 			printf("synced\n");
 		}
 
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 10000; i++) {
 			options.transfer_size = test_size[0].size;
 			ret = client.RMA(options.rma_op, options.transfer_size, &remote);
 			if (ret) {
@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
 		} else {
                         printf("synced\n");
                 }
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 10000; i++) {
 			options.transfer_size = test_size[0].size;
 			ret = server.RMA(options.rma_op, options.transfer_size, &remote);
 			if (ret) {
