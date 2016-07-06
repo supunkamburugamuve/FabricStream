@@ -343,6 +343,7 @@ ssize_t RDMAServer::RMA(enum rdma_rma_opcodes op, size_t size,
 int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 	struct fi_rma_iov *rma_iov;
 	int ret;
+        printf("rx_seq %d, prefix_size %d\n", rx_seq, rdma_utils_rx_prefix_size(info));
 
 	ret = GetRXComp(rx_seq);
 	if (ret) {
