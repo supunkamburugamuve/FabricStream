@@ -333,7 +333,7 @@ ssize_t RDMAServer::RMA(enum rdma_rma_opcodes op, size_t size,
 			return ret;
 	}
 
-	ret = GetRXComp(tx_seq);
+	ret = GetTXComp(tx_seq);
 	if (ret)
 		return ret;
 
