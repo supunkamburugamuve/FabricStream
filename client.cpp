@@ -632,7 +632,7 @@ int RDMACLient::InitEp(struct fi_info *hints, struct fi_info *fi) {
 
 	if (fi->rx_attr->op_flags != FI_MULTI_RECV) {
 		/* Initial receive will get remote address for unconnected EPs */
-		// ret = ft_post_rx(ep, MAX(rx_size, FT_MAX_CTRL_MSG), &rx_ctx);
+		ret = PostRX(ep, MAX(rx_size, FT_MAX_CTRL_MSG), &rx_ctx);
 		if (ret) {
 			return ret;
 		}
