@@ -343,7 +343,7 @@ ssize_t RDMAServer::RMA(enum rdma_rma_opcodes op, size_t size,
 int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 	struct fi_rma_iov *rma_iov;
 	int ret;
-        printf("rx_seq %d, prefix_size %d\n", rx_seq, rdma_utils_rx_prefix_size(info));
+    printf("rx_seq %lu, prefix_size %lu\n", rx_seq, rdma_utils_rx_prefix_size(info));
 
 	ret = GetRXComp(rx_seq);
 	if (ret) {
@@ -358,7 +358,7 @@ int RDMAServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 		printf("Failed to post RX\n");
 		return ret;
 	}
-    printf("domain %d   rx_buf %d\n", info->domain_attr->mr_mode, (uintptr_t) rx_buf);
+    printf("domain %d  rx_buf %lu\n", info->domain_attr->mr_mode, (uintptr_t) rx_buf);
 	rma_iov = (fi_rma_iov *)(static_cast<char *>(tx_buf) + rdma_utils_tx_prefix_size(info));
 	rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
 			0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
@@ -388,7 +388,7 @@ int RDMAServer::Finalize(void) {
 	struct fi_context ctx;
 	void *desc = fi_mr_desc(mr);
 
-	strcpy((char *)(tx_buf + rdma_utils_tx_prefix_size(info)), "fin");
+	strcpy((char *)(static_cast<char *>(tx_buf) + rdma_utils_tx_prefix_size(info)), "fin");
 	iov.iov_base = tx_buf;
 	iov.iov_len = 4 + rdma_utils_tx_prefix_size(info);
 
@@ -491,7 +491,7 @@ int RDMAServer::AllocMsgs(void) {
 		ret = fi_mr_reg(domain, buf, buf_size, rdma_utils_caps_to_mr_access(info->caps),
 				0, FT_MR_KEY, 0, &mr, NULL);
 		if (ret) {
-			printf("fi_mr_reg", ret);
+			printf("fi_mr_reg %d\n", ret);
 			return ret;
 		}
 	} else {

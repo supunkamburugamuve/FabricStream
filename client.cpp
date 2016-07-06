@@ -338,7 +338,7 @@ int RDMACLient::Finalize(void) {
 	struct fi_context ctx;
 	void *desc = fi_mr_desc(mr);
 
-	strcpy((char *)(tx_buf + rdma_utils_tx_prefix_size(info)), "fin");
+	strcpy((char *)(static_cast<char *>(tx_buf) + rdma_utils_tx_prefix_size(info)), "fin");
 	iov.iov_base = tx_buf;
 	iov.iov_len = 4 + rdma_utils_tx_prefix_size(info);
 
