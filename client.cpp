@@ -755,8 +755,8 @@ RDMACLient::RDMACLient(RDMAOptions *opts, fi_info *hints) {
 	this->tx_ctx = {};
 	this->rx_ctx = {};
 
-	this->tx_seq = 0;
-	this->rx_seq = 0;
+	this->tx_seq = 1;
+	this->rx_seq = 1;
 	this->tx_cq_cntr = 0;
 	this->rx_cq_cntr = 0;
 
