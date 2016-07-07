@@ -49,6 +49,9 @@ SServer::~SServer() {
 
 }
 
+/**
+ * Initialize the server
+ */
 int SServer::Start(void) {
 	int ret;
 	printf("Start server\n");
@@ -101,9 +104,8 @@ int SServer::Connect(void) {
 	uint32_t event;
 	ssize_t rd;
 	int ret;
-	// fabric domain we are working with
+	struct fid_ep *ep;
 	struct fid_domain *domain;
-
 
 	// read the events for incoming messages
 	rd = fi_eq_sread(eq, &event, &entry, sizeof entry, -1, 0);
@@ -112,7 +114,7 @@ int SServer::Connect(void) {
 		return (int) rd;
 	}
 
-	// this is the correct fi_info associated with active endpoint
+	// this is the correct fi_info associated with active end-point
 	if (event != FI_CONNREQ) {
 		fprintf(stderr, "Unexpected CM event %d\n", event);
 		ret = -FI_EOTHER;
@@ -126,24 +128,35 @@ int SServer::Connect(void) {
 	}
 
 	// create the connection
-	Connection con = new Connection(this->options, );
-
-	ret = AllocateActiveRes(this->info_hints, entry.info);
+	Connection con = new Connection(this->options, this->info_hints,
+			entry.info, this->fabric, domain, this->eq);
+	// allocate the queues and counters
+	ret = con.AllocateActiveResources();
 	if (ret) {
 		goto err;
 	}
 
-	ret = InitEp(this->info_hints, this->info);
+	// create the end point for this connection
+	ret = fi_endpoint(domain, entry.info, &ep, NULL);
+	if (ret) {
+		printf("fi_endpoint %d\n", ret);
+		return ret;
+	}
+
+	// initialize the EP
+	ret = con.InitEp(ep, this->eq);
 	if (ret) {
 		goto err;
 	}
 
+	// accept the incoming connection
 	ret = fi_accept(ep, NULL, 0);
 	if (ret) {
 		printf("fi_accept %d\n", ret);
 		goto err;
 	}
 
+	// read the confirmation
 	rd = fi_eq_sread(eq, &event, &entry, sizeof entry, -1, 0);
 	if (rd != sizeof entry) {
 		printf("fi_eq_sread accept %d\n", (int)rd);
@@ -162,6 +175,6 @@ int SServer::Connect(void) {
 
 	return 0;
 err:
-	fi_reject(pep, info->handle, NULL, 0);
+	fi_reject(pep, entry.info->handle, NULL, 0);
 	return ret;
 }

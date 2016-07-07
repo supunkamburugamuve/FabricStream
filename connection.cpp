@@ -1,28 +1,34 @@
-/*
- * connection.cpp
- *
- *  Created on: Jul 6, 2016
- *      Author: supun
- */
+#include <iostream>
 #include <cstdio>
+#include <cstdlib>
+#include <unistd.h>
+#include <cstdlib>
+#include <cstring>
+
+#include <rdma/fabric.h>
+#include <rdma/fi_domain.h>
+#include <rdma/fi_endpoint.h>
+#include <rdma/fi_cm.h>
+#include <rdma/fi_tagged.h>
+#include <rdma/fi_rma.h>
+#include <rdma/fi_errno.h>
 
 #include "utils.h"
 #include "connection.h"
 
-Connection::Connection(RDMAOptions *opts) {
+Connection::Connection(RDMAOptions *opts, struct fi_info *info_hints,
+		struct fi_info *info, struct fid_fabric *fabric, struct fid_domain *domain, struct fid_eq *eq) {
 	this->options = opts;
-	this->info = NULL;
-	this->info_pep = NULL;
-	this->info_hints = NULL;
+	this->info = info;
+	this->info_hints = info_hints;
+	this->fabric = fabric;
+	this->domain = domain;
 
 	this->txcq = NULL;
 	this->rxcq = NULL;
 	this->txcntr = NULL;
 	this->rxcntr = NULL;
-	this->fabric = NULL;
-	this->eq = NULL;
-	this->domain = NULL;
-	this->pep = NULL;
+
 	this->ep = NULL;
 	this->alias_ep = NULL;
 	this->av = NULL;
@@ -43,9 +49,7 @@ Connection::Connection(RDMAOptions *opts) {
 	this->remote_cq_data = 0;
 	this->waitset = NULL;
 
-	// allocate the hints
-	this->info_hints = hints;
-	this->eq_attr = {};
+
 	this->cq_attr = {};
 	this->cntr_attr = {};
 	this->av_attr = {};
@@ -58,9 +62,6 @@ Connection::Connection(RDMAOptions *opts) {
 	this->rx_cq_cntr = 0;
 
 	this->ft_skip_mr = 0;
-
-	// initialize this attribute, search weather this is correct
-	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
 
 	// get the information
 	// rdma_utils_get_info(this->options, hints, &this->info);
@@ -77,25 +78,26 @@ Connection::Connection(RDMAOptions *opts) {
 	this->timeout = -1;
 }
 
-int Connection::AllocateActiveRes(struct fi_info *hints, struct fi_info *fi) {
+int Connection::AllocateActiveResources() {
 	int ret;
 	printf("Allocate recv\n");
-	if (hints->caps & FI_RMA) {
-		ret = rdma_utils_set_rma_caps(fi);
+	if (info_hints->caps & FI_RMA) {
+		ret = rdma_utils_set_rma_caps(info);
 		if (ret)
 			return ret;
 	}
 
 	if (cq_attr.format == FI_CQ_FORMAT_UNSPEC) {
-		if (fi->caps & FI_TAGGED)
+		if (info->caps & FI_TAGGED) {
 			cq_attr.format = FI_CQ_FORMAT_TAGGED;
-		else
+		} else {
 			cq_attr.format = FI_CQ_FORMAT_CONTEXT;
+		}
 	}
 
 	if (this->options->options & FT_OPT_TX_CQ) {
 		rdma_utils_cq_set_wait_attr(this->options, this->waitset, &this->cq_attr);
-		cq_attr.size = fi->tx_attr->size;
+		cq_attr.size = info->tx_attr->size;
 		ret = fi_cq_open(domain, &cq_attr, &txcq, &txcq);
 		if (ret) {
 			printf("fi_cq_open %d\n", ret);
@@ -114,7 +116,7 @@ int Connection::AllocateActiveRes(struct fi_info *hints, struct fi_info *fi) {
 
 	if (this->options->options & FT_OPT_RX_CQ) {
 		rdma_utils_cq_set_wait_attr(this->options, this->waitset, &this->cq_attr);
-		cq_attr.size = fi->rx_attr->size;
+		cq_attr.size = info->rx_attr->size;
 		ret = fi_cq_open(domain, &cq_attr, &rxcq, &rxcq);
 		if (ret) {
 			printf("fi_cq_open %d\n", ret);
@@ -131,9 +133,9 @@ int Connection::AllocateActiveRes(struct fi_info *hints, struct fi_info *fi) {
 		}
 	}
 
-	if (fi->ep_attr->type == FI_EP_RDM || fi->ep_attr->type == FI_EP_DGRAM) {
-		if (fi->domain_attr->av_type != FI_AV_UNSPEC) {
-			av_attr.type = fi->domain_attr->av_type;
+	if (this->info->ep_attr->type == FI_EP_RDM || this->info->ep_attr->type == FI_EP_DGRAM) {
+		if (this->info->domain_attr->av_type != FI_AV_UNSPEC) {
+			av_attr.type = info->domain_attr->av_type;
 		}
 
 		if (this->options->av_name) {
@@ -146,15 +148,385 @@ int Connection::AllocateActiveRes(struct fi_info *hints, struct fi_info *fi) {
 		}
 	}
 
-	ret = fi_endpoint(domain, fi, &ep, NULL);
+	return 0;
+}
+
+int Connection::InitEp(struct fid_ep *ep, struct fid_eq *eq) {
+	int flags, ret;
+	printf("Init EP\n");
+
+	this->ep = ep;
+	if (this->info->ep_attr->type == FI_EP_MSG) {
+		FT_EP_BIND(ep, eq, 0);
+	}
+	FT_EP_BIND(ep, av, 0);
+	FT_EP_BIND(ep, txcq, FI_TRANSMIT);
+	FT_EP_BIND(ep, rxcq, FI_RECV);
+
+	ret = ft_get_cq_fd(this->options, txcq, &tx_fd);
 	if (ret) {
-		printf("fi_endpoint %d\n", ret);
 		return ret;
+	}
+
+	ret = ft_get_cq_fd(this->options, rxcq, &rx_fd);
+	if (ret) {
+		return ret;
+	}
+
+	flags = !txcq ? FI_SEND : 0;
+	if (this->info_hints->caps & (FI_WRITE | FI_READ)) {
+		flags |= this->info_hints->caps & (FI_WRITE | FI_READ);
+	} else if (this->info_hints->caps & FI_RMA) {
+		flags |= FI_WRITE | FI_READ;
+	}
+
+	FT_EP_BIND(ep, txcntr, flags);
+	flags = !rxcq ? FI_RECV : 0;
+	if (this->info_hints->caps & (FI_REMOTE_WRITE | FI_REMOTE_READ)) {
+		flags |= this->info_hints->caps & (FI_REMOTE_WRITE | FI_REMOTE_READ);
+	} else if (this->info_hints->caps & FI_RMA) {
+		flags |= FI_REMOTE_WRITE | FI_REMOTE_READ;
+	}
+	FT_EP_BIND(ep, rxcntr, flags);
+	ret = fi_enable(ep);
+	if (ret) {
+		printf("fi_enable %d\n", ret);
+		return ret;
+	}
+	if (this->info->rx_attr->op_flags != FI_MULTI_RECV) {
+		/* Initial receive will get remote address for unconnected EPs */
+		ret = PostRX(ep, MAX(rx_size, FT_MAX_CTRL_MSG), &rx_ctx);
+		if (ret) {
+			return ret;
+		}
+	}
+	return 0;
+}
+
+#define FT_POST(post_fn, comp_fn, seq, op_str, ...)				\
+	do {									\
+		int timeout_save;						\
+		int ret, rc;							\
+										\
+		while (1) {							\
+			ret = post_fn(__VA_ARGS__);				\
+			if (!ret)						\
+				break;						\
+										\
+			if (ret != -FI_EAGAIN) {				\
+				printf("%s %d\n", op_str, ret);			\
+				return ret;					\
+			}							\
+										\
+			timeout_save = timeout;					\
+			timeout = 0;						\
+			rc = comp_fn(seq);					\
+			if (rc && rc != -FI_EAGAIN) {				\
+				printf("Failed to get %s completion\n", op_str);	\
+				return rc;					\
+			}							\
+			timeout = timeout_save;					\
+		}								\
+		seq++;								\
+	} while (0)
+
+/*
+ * fi_cq_err_entry can be cast to any CQ entry format.
+ */
+int Connection::SpinForCompletion(struct fid_cq *cq, uint64_t *cur,
+			    uint64_t total, int timeout) {
+	struct fi_cq_err_entry comp;
+	struct timespec a, b;
+	int ret;
+
+	if (timeout >= 0)
+		clock_gettime(CLOCK_MONOTONIC, &a);
+
+	while (total - *cur > 0) {
+		ret = fi_cq_read(cq, &comp, 1);
+		if (ret > 0) {
+			if (timeout >= 0)
+				clock_gettime(CLOCK_MONOTONIC, &a);
+
+			(*cur)++;
+		} else if (ret < 0 && ret != -FI_EAGAIN) {
+			return ret;
+		} else if (timeout >= 0) {
+			clock_gettime(CLOCK_MONOTONIC, &b);
+			if ((b.tv_sec - a.tv_sec) > timeout) {
+				fprintf(stderr, "%ds timeout expired\n", timeout);
+				return -FI_ENODATA;
+			}
+		}
 	}
 
 	return 0;
 }
 
+/*
+ * fi_cq_err_entry can be cast to any CQ entry format.
+ */
+int Connection::WaitForCompletion(struct fid_cq *cq, uint64_t *cur,
+			    uint64_t total, int timeout) {
+	struct fi_cq_err_entry comp;
+	int ret;
+
+	while (total - *cur > 0) {
+		ret = fi_cq_sread(cq, &comp, 1, NULL, timeout);
+		if (ret > 0)
+			(*cur)++;
+		else if (ret < 0 && ret != -FI_EAGAIN)
+			return ret;
+	}
+
+	return 0;
+}
+
+/*
+ * fi_cq_err_entry can be cast to any CQ entry format.
+ */
+int Connection::FDWaitForComp(struct fid_cq *cq, uint64_t *cur,
+			    uint64_t total, int timeout) {
+	struct fi_cq_err_entry comp;
+	struct fid *fids[1];
+	int fd, ret;
+
+	fd = cq == txcq ? tx_fd : rx_fd;
+	fids[0] = &cq->fid;
+
+	while (total - *cur > 0) {
+		ret = fi_trywait(fabric, fids, 1);
+		if (ret == FI_SUCCESS) {
+			ret = rdma_utils_poll_fd(fd, timeout);
+			if (ret && ret != -FI_EAGAIN)
+				return ret;
+		}
+
+		ret = fi_cq_read(cq, &comp, 1);
+		if (ret > 0) {
+			(*cur)++;
+		} else if (ret < 0 && ret != -FI_EAGAIN) {
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+int Connection::GetCQComp(struct fid_cq *cq, uint64_t *cur,
+			  uint64_t total, int timeout) {
+	int ret;
+
+	switch (this->options->comp_method) {
+	case FT_COMP_SREAD:
+		ret = WaitForCompletion(cq, cur, total, timeout);
+		break;
+	case FT_COMP_WAIT_FD:
+		ret = FDWaitForComp(cq, cur, total, timeout);
+		break;
+	default:
+		ret = SpinForCompletion(cq, cur, total, timeout);
+		break;
+	}
+
+	if (ret) {
+		if (ret == -FI_EAVAIL) {
+			ret = rdma_utils_cq_readerr(cq);
+			(*cur)++;
+		} else {
+			printf("ft_get_cq_comp %d\n", ret);
+		}
+	}
+	return ret;
+}
+
+int Connection::GetRXComp(uint64_t total) {
+	int ret = FI_SUCCESS;
+
+	if (rxcq) {
+		ret = GetCQComp(rxcq, &rx_cq_cntr, total, timeout);
+	} else if (rxcntr) {
+		while (fi_cntr_read(rxcntr) < total) {
+			ret = fi_cntr_wait(rxcntr, total, timeout);
+			if (ret)
+				printf("fi_cntr_wait %d\n", ret);
+			else
+				break;
+		}
+	} else {
+		printf("Trying to get a RX completion when no RX CQ or counter were opened");
+		ret = -FI_EOTHER;
+	}
+	return ret;
+}
+
+int Connection::GetTXComp(uint64_t total) {
+	int ret;
+
+	if (txcq) {
+		ret = GetCQComp(txcq, &tx_cq_cntr, total, -1);
+	} else if (txcntr) {
+		ret = fi_cntr_wait(txcntr, total, -1);
+		if (ret)
+			printf("fi_cntr_wait %d\n", ret);
+	} else {
+		printf("Trying to get a TX completion when no TX CQ or counter were opened \n");
+		ret = -FI_EOTHER;
+	}
+	return ret;
+}
+
+ssize_t Connection::PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context* ctx) {
+	if (info_hints->caps & FI_TAGGED) {
+		FT_POST(fi_tsend, GetTXComp, tx_seq, "transmit", ep,
+				tx_buf, size + rdma_utils_tx_prefix_size(info), fi_mr_desc(mr),
+				fi_addr, tx_seq, ctx);
+	} else {
+		FT_POST(fi_send, GetTXComp, tx_seq, "transmit", ep,
+				tx_buf,	size + rdma_utils_tx_prefix_size(info), fi_mr_desc(mr),
+				fi_addr, ctx);
+	}
+	return 0;
+}
+
+ssize_t Connection::TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context *ctx) {
+	ssize_t ret;
+
+	if (rdma_utils_check_opts(options, FT_OPT_VERIFY_DATA | FT_OPT_ACTIVE))
+		rdma_utils_fill_buf((char *) tx_buf + rdma_utils_tx_prefix_size(info), size);
+
+	ret = PostTX(ep, fi_addr, size, ctx);
+	if (ret)
+		return ret;
+
+	ret = GetTXComp(tx_seq);
+	return ret;
+}
+
+ssize_t Connection::PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx) {
+	if (info_hints->caps & FI_TAGGED) {
+		FT_POST(fi_trecv, GetRXComp, rx_seq, "receive", ep, rx_buf,
+				MAX(size, FT_MAX_CTRL_MSG) + rdma_utils_rx_prefix_size(info),
+				fi_mr_desc(mr), 0, rx_seq, 0, ctx);
+	} else {
+		FT_POST(fi_recv, GetRXComp, rx_seq, "receive", ep, rx_buf,
+				MAX(size, FT_MAX_CTRL_MSG) + rdma_utils_rx_prefix_size(info),
+				fi_mr_desc(mr),	0, ctx);
+	}
+	return 0;
+}
+
+ssize_t Connection::RX(struct fid_ep *ep, size_t size) {
+	ssize_t ret;
+
+	ret = GetRXComp(rx_seq);
+	if (ret)
+		return ret;
+
+	if (rdma_utils_check_opts(options, FT_OPT_VERIFY_DATA | FT_OPT_ACTIVE)) {
+		ret = rdma_utils_check_buf((char *) rx_buf + rdma_utils_rx_prefix_size(info), size);
+		if (ret)
+			return ret;
+	}
+	/* TODO: verify CQ data, if available */
+
+	/* Ignore the size arg. Post a buffer large enough to handle all message
+	 * sizes. ft_sync() makes use of ft_rx() and gets called in tests just before
+	 * message size is updated. The recvs posted are always for the next incoming
+	 * message */
+	ret = PostRX(ep, rx_size, &rx_ctx);
+	return ret;
+}
+
+ssize_t Connection::PostRMA(enum rdma_rma_opcodes op, size_t size,
+		struct fi_rma_iov *remote) {
+	switch (op) {
+	case FT_RMA_WRITE:
+		FT_POST(fi_write, GetTXComp, tx_seq, "fi_write", ep, tx_buf,
+				options->transfer_size, fi_mr_desc(mr), remote_fi_addr,
+				remote->addr, remote->key, ep);
+		break;
+	case FT_RMA_WRITEDATA:
+		FT_POST(fi_writedata, GetTXComp, tx_seq, "fi_writedata", ep,
+				tx_buf, options->transfer_size, fi_mr_desc(mr),
+				remote_cq_data,	remote_fi_addr,	remote->addr,
+				remote->key, ep);
+		break;
+	case FT_RMA_READ:
+		FT_POST(fi_read, GetTXComp, tx_seq, "fi_read", ep, rx_buf,
+				options->transfer_size, fi_mr_desc(mr), remote_fi_addr,
+				remote->addr, remote->key, ep);
+		break;
+	default:
+		printf("Unknown RMA op type\n");
+		return EXIT_FAILURE;
+	}
+
+	return 0;
+}
+
+ssize_t Connection::RMA(enum rdma_rma_opcodes op, size_t size,
+		struct fi_rma_iov *remote) {
+	int ret;
+
+	ret = PostRMA(op, size, remote);
+	if (ret)
+		return ret;
+
+	if (op == FT_RMA_WRITEDATA) {
+		ret = RX(ep, 0);
+		if (ret)
+			return ret;
+	}
+
+	ret = GetTXComp(tx_seq);
+	if (ret)
+		return ret;
+
+	return 0;
+}
+
+int Connection::ExchangeKeys(struct fi_rma_iov *peer_iov) {
+	struct fi_rma_iov *rma_iov;
+	int ret;
+    printf("rx_seq tx_seq %lu %lu prefix_size %lu\n", rx_seq, tx_seq, rdma_utils_rx_prefix_size(info));
+
+	ret = GetRXComp(rx_seq);
+	if (ret) {
+		printf("Failed to RX Completion\n");
+		return ret;
+	}
+
+	rma_iov = (fi_rma_iov *)(static_cast<char *>(rx_buf) + rdma_utils_rx_prefix_size(info));
+	*peer_iov = *rma_iov;
+	ret = PostRX(ep, rx_size, &rx_ctx);
+	if (ret) {
+		printf("Failed to post RX\n");
+		return ret;
+	}
+    printf("domain %d  rx_buf %lu\n", info->domain_attr->mr_mode, (uintptr_t) rx_buf);
+	rma_iov = (fi_rma_iov *)(static_cast<char *>(tx_buf) + rdma_utils_tx_prefix_size(info));
+	rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
+			0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
+	rma_iov->key = fi_mr_key(mr);
+	ret = TX(ep, remote_fi_addr, sizeof *rma_iov, &tx_ctx);
+	if (ret) {
+		printf("Failed to TX\n");
+		return ret;
+	}
+	printf("Key %lu %lu %lu\n", peer_iov->addr, peer_iov->key, peer_iov->len);
+	return ret;
+}
+
+int Connection::sync() {
+	int ret;
+	ret = RX(ep, 1);
+	if (ret)
+		return ret;
+
+	ret = TX(ep, remote_fi_addr, 1, &tx_ctx);
+	return ret;
+}
 
 Connection::~Connection() {
 

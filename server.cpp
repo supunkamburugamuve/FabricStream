@@ -688,60 +688,6 @@ int RDMAServer::InitEp(struct fi_info *hints, struct fi_info *fi) {
 	return 0;
 }
 
-/*
-int RDMAServer::InitEp2(struct fi_info *hints, struct fi_info *fi) {
-	printf("Init Ep\n");
-	int flags, ret;
-
-	if (fi->ep_attr->type == FI_EP_MSG) {
-		FT_EP_BIND(ep, eq, 0);
-	}
-	FT_EP_BIND(ep, av, 0);
-	FT_EP_BIND(ep, txcq, FI_TRANSMIT);
-	FT_EP_BIND(ep, rxcq, FI_RECV);
-
-	ret = ft_get_cq_fd(this->options, txcq, &tx_fd);
-	if (ret) {
-		return ret;
-	}
-
-	ret = ft_get_cq_fd(this->options, rxcq, &rx_fd);
-	if (ret) {
-		return ret;
-	}
-
-	flags = !txcq ? FI_SEND : 0;
-	if (hints->caps & (FI_WRITE | FI_READ)) {
-		flags |= hints->caps & (FI_WRITE | FI_READ);
-	} else if (hints->caps & FI_RMA) {
-		flags |= FI_WRITE | FI_READ;
-	}
-	FT_EP_BIND(ep, txcntr, flags);
-	flags = !rxcq ? FI_RECV : 0;
-	if (hints->caps & (FI_REMOTE_WRITE | FI_REMOTE_READ)) {
-		flags |= hints->caps & (FI_REMOTE_WRITE | FI_REMOTE_READ);
-	} else if (hints->caps & FI_RMA) {
-		flags |= FI_REMOTE_WRITE | FI_REMOTE_READ;
-	}
-	FT_EP_BIND(ep, rxcntr, flags);
-
-	ret = fi_enable(ep);
-	if (ret) {
-		printf("fi_enable %d\n", ret);
-		return ret;
-	}
-
-	if (fi->rx_attr->op_flags != FI_MULTI_RECV) {
-		// ret = ft_post_rx(ep, MAX(rx_size, FT_MAX_CTRL_MSG), &rx_ctx);
-		if (ret) {
-			return ret;
-		}
-	}
-
-	return 0;
-}
-*/
-
 int RDMAServer::ServerConnect(void) {
 	struct fi_eq_cm_entry entry;
 	uint32_t event;
