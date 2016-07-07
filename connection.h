@@ -4,6 +4,7 @@
 class Connection {
 public:
 	Connection(RDMAOptions *opts);
+	int AllocateActiveRes(struct fi_info *hints, struct fi_info *fi);
 	virtual ~Connection();
 private:
 	// options for initialization
