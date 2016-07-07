@@ -3,7 +3,7 @@
 
 class Connection {
 public:
-	Connection();
+	Connection(RDMAOptions *opts);
 	virtual ~Connection();
 private:
 	// options for initialization

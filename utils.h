@@ -64,6 +64,7 @@ public:
   enum rdma_comp_method comp_method;
 
   RDMAOptions();
+  void Free();
 };
 
 #define FT_EP_BIND(ep, fd, flags)					\
@@ -76,6 +77,18 @@ public:
 				return ret;				\
 			}						\
 		}							\
+	} while (0)
+
+#define FT_CLOSE_FID(fd)					\
+	do {							\
+		int ret;					\
+		if ((fd)) {					\
+			ret = fi_close(&(fd)->fid);		\
+			if (ret)				\
+				printf("fi_close (%d) fid %d",	\
+					ret, (int) (fd)->fid.fclass);	\
+			fd = NULL;				\
+		}						\
 	} while (0)
 
 #define MAX(a,b) (((a)>(b))?(a):(b))

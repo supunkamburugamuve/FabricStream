@@ -31,6 +31,10 @@ RDMAOptions::RDMAOptions() {
 	this->rma_op = FT_RMA_WRITE;
 }
 
+void RDMAOptions::Free() {
+
+}
+
 int rdma_utils_set_rma_caps(struct fi_info *fi) {
 	fi->caps |= FI_REMOTE_READ;
 	if (fi->mode & FI_LOCAL_MR)
@@ -213,12 +217,6 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 	if (!hints->ep_attr->type) {
 		hints->ep_attr->type = FI_EP_RDM;
 	}
-	// hints->ep_attr->type = FI_EP_RDM;
-
-//	hints->domain_attr->mr_mode = FI_MR_BASIC;
-//	hints->ep_attr->type = FI_EP_RDM;
-//	hints->caps = FI_MSG | FI_RMA | FI_RMA_EVENT;
-//	hints->mode = FI_CONTEXT | FI_LOCAL_MR | FI_RX_CQ_DATA;
 
 	// now lets retrieve the available network services
 	// according to hints
@@ -226,7 +224,9 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 	int ret = fi_getinfo(RDMA_FIVERSION, node, service, flags, hints, info);
 	if (ret) {
 		printf("Fi_info failed %d\n", ret);
+		return 1;
 	}
+
 	if (*info) {
 		fi_info *next = *info;
 		while (next) {
@@ -241,6 +241,7 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 		printf("No information returned\n");
 		return 1;
 	}
+
 	return 0;
 }
 
