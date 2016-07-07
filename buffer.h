@@ -5,8 +5,11 @@
 
 class Buffer {
 public:
-	Buffer();
+	Buffer(uint32_t buf_size, uint32_t no_bufs);
 	virtual ~Buffer();
+	int Increment(int size, int current);
+	int IncrementHead();
+	int IncrementTail();
 private:
 	// the list of buffers
 	uint8_t *buffers;
