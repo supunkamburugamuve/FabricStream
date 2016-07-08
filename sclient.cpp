@@ -121,7 +121,14 @@ int SClient::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 
 int SClient::sync(void) {
 	if (this->con) {
-		return con->sync();
+		int ret;
+		ret = this->con->TX(1);
+		if (ret) {
+			return ret;
+		}
+
+		ret = this->con->RX(1);
+		return ret;
 	}
 	return EXIT_FAILURE;
 }

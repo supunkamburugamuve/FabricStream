@@ -458,13 +458,13 @@ ssize_t Connection::PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, st
 	return 0;
 }
 
-ssize_t Connection::TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context *ctx) {
+ssize_t Connection::TX(size_t size) {
 	ssize_t ret;
 
 	if (rdma_utils_check_opts(options, FT_OPT_VERIFY_DATA | FT_OPT_ACTIVE))
 		rdma_utils_fill_buf((char *) tx_buf + rdma_utils_tx_prefix_size(info), size);
 
-	ret = PostTX(ep, fi_addr, size, ctx);
+	ret = PostTX(ep, remote_fi_addr, size, &this->tx_ctx);
 	if (ret)
 		return ret;
 
@@ -485,7 +485,7 @@ ssize_t Connection::PostRX(struct fid_ep *ep, size_t size, struct fi_context* ct
 	return 0;
 }
 
-ssize_t Connection::RX(struct fid_ep *ep, size_t size) {
+ssize_t Connection::RX(size_t size) {
 	ssize_t ret;
 
 	ret = GetRXComp(rx_seq);
@@ -503,7 +503,7 @@ ssize_t Connection::RX(struct fid_ep *ep, size_t size) {
 	 * sizes. ft_sync() makes use of ft_rx() and gets called in tests just before
 	 * message size is updated. The recvs posted are always for the next incoming
 	 * message */
-	ret = PostRX(ep, rx_size, &rx_ctx);
+	ret = PostRX(this->ep, this->rx_size, &this->rx_ctx);
 	return ret;
 }
 
@@ -543,7 +543,7 @@ ssize_t Connection::RMA(enum rdma_rma_opcodes op, size_t size,
 		return ret;
 
 	if (op == FT_RMA_WRITEDATA) {
-		ret = RX(ep, 0);
+		ret = RX(0);
 		if (ret)
 			return ret;
 	}
@@ -578,7 +578,7 @@ int Connection::ExchangeKeysServer(struct fi_rma_iov *peer_iov) {
 	rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
 			0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
 	rma_iov->key = fi_mr_key(mr);
-	ret = TX(ep, remote_fi_addr, sizeof *rma_iov, &tx_ctx);
+	ret = TX(sizeof *rma_iov);
 	if (ret) {
 		printf("Failed to TX\n");
 		return ret;
@@ -596,7 +596,7 @@ int Connection::ExchangeKeysClient(struct fi_rma_iov *peer_iov) {
 	rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
 			0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
 	rma_iov->key = fi_mr_key(mr);
-	ret = TX(ep, remote_fi_addr, sizeof *rma_iov, &tx_ctx);
+	ret = TX(sizeof *rma_iov);
 	if (ret) {
 		printf("Failed to TX\n");
 		return ret;
@@ -621,11 +621,11 @@ int Connection::ExchangeKeysClient(struct fi_rma_iov *peer_iov) {
 
 int Connection::sync() {
 	int ret;
-	ret = RX(ep, 1);
+	ret = RX(1);
 	if (ret)
 		return ret;
 
-	ret = TX(ep, remote_fi_addr, 1, &tx_ctx);
+	ret = TX(1);
 	return ret;
 }
 

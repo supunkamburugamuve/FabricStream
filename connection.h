@@ -29,6 +29,9 @@ public:
     		struct fi_rma_iov *remote);
     ssize_t RMA(enum rdma_rma_opcodes op, size_t size,
 			struct fi_rma_iov *remote);
+
+    ssize_t TX(size_t size);
+    ssize_t RX(size_t size);
     int Finalize(void);
 private:
 	// options for initialization
@@ -79,8 +82,6 @@ private:
 
     ssize_t PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context* ctx);
     ssize_t PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx);
-    ssize_t TX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context *ctx);
-    ssize_t RX(struct fid_ep *ep, size_t size);
     int GetTXComp(uint64_t total);
     int GetRXComp(uint64_t total);
     int GetCQComp(struct fid_cq *cq, uint64_t *cur,

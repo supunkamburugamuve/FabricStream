@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
 				printf("Failed to RMA \n");
 			}
 		}
-                printf("Done rma\n");
+        printf("Done rma\n");
 		ret = client.sync();
 		if (ret) {
 			printf("Failed second sync");
