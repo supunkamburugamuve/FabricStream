@@ -38,9 +38,9 @@ int SClient::Connect(void) {
 	uint32_t event;
 	ssize_t rd;
 	int ret;
-	struct fid_ep *ep;
-	struct fid_domain *domain;
-	Connection *con;
+	struct fid_ep *ep = NULL;
+	struct fid_domain *domain = NULL;
+	Connection *con = NULL;
 
 	printf("Client connect \n");
 	ret = rdma_utils_get_info(this->options, this->info_hints, &this->info);
