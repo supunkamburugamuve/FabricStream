@@ -13,7 +13,11 @@
 #include <rdma/fi_rma.h>
 #include <rdma/fi_errno.h>
 
+#include "rdma_fabric.h"
+#include "server.h"
+#include "utils.h"
 #include "sclient.h"
+#include "connection.h"
 
 SClient::SClient(RDMAOptions *opts) {
 	this->info = NULL;

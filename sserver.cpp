@@ -16,6 +16,7 @@
 #include "rdma_fabric.h"
 #include "server.h"
 #include "utils.h"
+#include "connection.h"
 
 #include "sserver.h"
 
