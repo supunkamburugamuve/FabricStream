@@ -30,7 +30,6 @@ SServer::SServer(RDMAOptions *opts, fi_info *hints) {
 	this->eq_attr = {};
 	// initialize this attribute, search weather this is correct
     this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
-
     this->con = NULL;
 }
 
@@ -197,7 +196,6 @@ int SServer::sync(void) {
 		if (ret) {
 			return ret;
 		}
-
 		ret = this->con->TX(1);
 		return ret;
 	}
@@ -217,4 +215,6 @@ int SServer::Finalize(void) {
 	}
 	return EXIT_FAILURE;
 }
+
+
 

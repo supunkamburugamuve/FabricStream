@@ -58,6 +58,12 @@ public:
   char *av_name;
   int transfer_size;
   rdma_rma_opcodes rma_op;
+  // buffer size of a individual buffer, if it is
+  // smaller than minimum or greater that maximum supported,
+  // it will be adjusted to the minimum
+  int buf_size;
+  // no of buffers
+  int no_buffers;
   /**
    * Computation method, spin, wait or wait-set
    */

@@ -5,16 +5,17 @@
 
 class Buffer {
 public:
-	Buffer(uint32_t buf_size, uint32_t no_bufs);
+	Buffer(uint64_t buf_size, uint32_t no_bufs);
+	int Init(bool align);
 	virtual ~Buffer();
 	int Increment(int size, int current);
-	int IncrementHead();
-	int IncrementTail();
+	bool IncrementHead();
+	bool IncrementTail();
 private:
 	// the list of buffers
-	uint8_t *buffers;
+	void **buffers;
 	// list of buffer sizes
-	uint64_t *sizes;
+	uint64_t buf_size;
 	// array of actual data sizes
 	uint64_t *content_sizes;
 	// wr id for corresponding buffer

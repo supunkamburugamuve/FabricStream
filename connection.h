@@ -66,6 +66,8 @@ private:
 	// buffer used for communication
 	void *buf, *tx_buf, *rx_buf;
 	size_t buf_size, tx_size, rx_size;
+	Buffer *recv_buf;
+	Buffer *send_buf;
 
 	int ft_skip_mr = 0;
 
@@ -93,6 +95,7 @@ private:
     int SpinForCompletion(struct fid_cq *cq, uint64_t *cur,
     			    uint64_t total, int timeout);
     int AllocMsgs(void);
+    int AllocateBuffers(void);
 };
 
 #endif /* CONNECTION_H_ */
