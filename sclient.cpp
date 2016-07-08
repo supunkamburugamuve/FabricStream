@@ -39,6 +39,7 @@ int SClient::Connect(void) {
 	int ret;
 	struct fid_ep *ep;
 	struct fid_domain *domain;
+	Connection *con;
 
 	printf("Client connect \n");
 	ret = rdma_utils_get_info(this->options, this->info_hints, &this->info);
@@ -64,7 +65,7 @@ int SClient::Connect(void) {
 	}
 
 	// create the connection
-	Connection *con = new Connection(this->options, this->info_hints,
+	con = new Connection(this->options, this->info_hints,
 			this->info, this->fabric, domain, this->eq);
 
 	// allocate the resources

@@ -107,6 +107,7 @@ int SServer::Connect(void) {
 	int ret;
 	struct fid_ep *ep;
 	struct fid_domain *domain;
+	Connection *con;
 
 	// read the events for incoming messages
 	rd = fi_eq_sread(eq, &event, &entry, sizeof entry, -1, 0);
@@ -129,7 +130,7 @@ int SServer::Connect(void) {
 	}
 
 	// create the connection
-	Connection *con = new Connection(this->options, this->info_hints,
+	con = new Connection(this->options, this->info_hints,
 			entry.info, this->fabric, domain, this->eq);
 	// allocate the queues and counters
 	ret = con->AllocateActiveResources();
@@ -141,7 +142,7 @@ int SServer::Connect(void) {
 	ret = fi_endpoint(domain, entry.info, &ep, NULL);
 	if (ret) {
 		printf("fi_endpoint %d\n", ret);
-		return ret;
+		goto err;
 	}
 
 	// initialize the EP
