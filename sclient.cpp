@@ -76,7 +76,7 @@ int SClient::Connect(void) {
 	}
 
 	// create the end point for this connection
-	ret = fi_endpoint(domain, entry.info, &ep, NULL);
+	ret = fi_endpoint(domain, this->info, &ep, NULL);
 	if (ret) {
 		printf("fi_endpoint %d\n", ret);
 		return ret;
