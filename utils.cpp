@@ -232,8 +232,8 @@ int rdma_utils_get_info(RDMAOptions *options, struct fi_info *hints, struct fi_i
 		while (next) {
 			fi_fabric_attr *attr = next->fabric_attr;
 			printf("fabric attr name=%s prov_name=%s\n", attr->name, attr->prov_name);
-			// fi_str = fi_tostr(next, FI_TYPE_INFO);
-			// std::cout << "FI" << fi_str << std::endl;
+			fi_str = fi_tostr(next, FI_TYPE_INFO);
+			std::cout << "FI" << fi_str << std::endl;
 			print_short_info(next);
 			next = next->next;
 		}
