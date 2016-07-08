@@ -176,7 +176,7 @@ int SServer::Connect(void) {
 	}
 
 	printf("Connection established\n");
-
+	this->con = con;
 	return 0;
 err:
 	fi_reject(pep, entry.info->handle, NULL, 0);

@@ -107,7 +107,7 @@ int SClient::Connect(void) {
 		ret = -FI_EOTHER;
 		return ret;
 	}
-
+	this->con = con;
 	printf("COnnection established\n");
 	return 0;
 }
