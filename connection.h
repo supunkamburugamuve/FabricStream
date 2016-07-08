@@ -19,7 +19,8 @@ public:
 	/**
 	 * Exchange keys with the peer
 	 */
-    int ExchangeKeys(struct fi_rma_iov *peer_iov);
+    int ExchangeKeysServer(struct fi_rma_iov *peer_iov);
+    int ExchangeKeysClient(struct fi_rma_iov *peer_iov);
     int sync();
     /**
      * Post a message

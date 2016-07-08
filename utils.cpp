@@ -29,6 +29,9 @@ RDMAOptions::RDMAOptions() {
 	this->av_name = NULL;
 	this->options = FT_OPT_RX_CQ | FT_OPT_TX_CQ;
 	this->rma_op = FT_RMA_WRITE;
+	this->comp_method = FT_COMP_SPIN;
+	this->transfer_size = 0;
+	this->fname = NULL;
 }
 
 void RDMAOptions::Free() {

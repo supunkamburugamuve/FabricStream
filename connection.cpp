@@ -555,7 +555,7 @@ ssize_t Connection::RMA(enum rdma_rma_opcodes op, size_t size,
 	return 0;
 }
 
-int Connection::ExchangeKeys(struct fi_rma_iov *peer_iov) {
+int Connection::ExchangeKeysServer(struct fi_rma_iov *peer_iov) {
 	struct fi_rma_iov *rma_iov;
 	int ret;
     printf("rx_seq tx_seq %lu %lu prefix_size %lu\n", rx_seq, tx_seq, rdma_utils_rx_prefix_size(info));
@@ -581,6 +581,38 @@ int Connection::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 	ret = TX(ep, remote_fi_addr, sizeof *rma_iov, &tx_ctx);
 	if (ret) {
 		printf("Failed to TX\n");
+		return ret;
+	}
+	printf("Key %lu %lu %lu\n", peer_iov->addr, peer_iov->key, peer_iov->len);
+	return ret;
+}
+
+int Connection::ExchangeKeysClient(struct fi_rma_iov *peer_iov) {
+	struct fi_rma_iov *rma_iov;
+	int ret;
+	printf("rx_seq tx_seq %lu %lu prefix_size %lu\n", rx_seq, tx_seq, rdma_utils_rx_prefix_size(info));
+
+	rma_iov = (fi_rma_iov *)(static_cast<char *>(tx_buf) + rdma_utils_tx_prefix_size(info));
+	rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
+			0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
+	rma_iov->key = fi_mr_key(mr);
+	ret = TX(ep, remote_fi_addr, sizeof *rma_iov, &tx_ctx);
+	if (ret) {
+		printf("Failed to TX\n");
+		return ret;
+	}
+
+	ret = GetRXComp(rx_seq);
+	if (ret) {
+		printf("Failed to get rx completion\n");
+		return ret;
+	}
+
+	rma_iov = (fi_rma_iov *)(static_cast<char *>(rx_buf) + rdma_utils_rx_prefix_size(info));
+	*peer_iov = *rma_iov;
+	ret = PostRX(ep, rx_size, &rx_ctx);
+	if (ret) {
+		printf("Failed to post RX\n");
 		return ret;
 	}
 	printf("Key %lu %lu %lu\n", peer_iov->addr, peer_iov->key, peer_iov->len);
