@@ -1,12 +1,7 @@
-/*
- * sclient.h
- *
- *  Created on: Jul 7, 2016
- *      Author: supun
- */
-
 #ifndef SCLIENT_H_
 #define SCLIENT_H_
+
+#include "connection.h"
 
 class SClient {
 public:

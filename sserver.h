@@ -1,6 +1,8 @@
 #ifndef SSERVER_H_
 #define SSERVER_H_
 
+#include "connection.h"
+
 class SServer {
 public:
 	SServer(RDMAOptions *opts, fi_info *hints);
