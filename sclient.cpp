@@ -64,11 +64,11 @@ int SClient::Connect(void) {
 	}
 
 	// create the connection
-	Connection con = new Connection(this->options, this->info_hints,
+	Connection *con = new Connection(this->options, this->info_hints,
 			this->info, this->fabric, domain, this->eq);
 
 	// allocate the resources
-	ret = con.AllocateActiveResources();
+	ret = con->AllocateActiveResources();
 	if (ret) {
 		return ret;
 	}
@@ -81,7 +81,7 @@ int SClient::Connect(void) {
 	}
 
 	// initialize the endpoint
-	ret = con.InitEp(ep, this->eq);
+	ret = con->InitEp(ep, this->eq);
 	if (ret) {
 		return ret;
 	}

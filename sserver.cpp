@@ -129,10 +129,10 @@ int SServer::Connect(void) {
 	}
 
 	// create the connection
-	Connection con = new Connection(this->options, this->info_hints,
+	Connection *con = new Connection(this->options, this->info_hints,
 			entry.info, this->fabric, domain, this->eq);
 	// allocate the queues and counters
-	ret = con.AllocateActiveResources();
+	ret = con->AllocateActiveResources();
 	if (ret) {
 		goto err;
 	}
@@ -145,7 +145,7 @@ int SServer::Connect(void) {
 	}
 
 	// initialize the EP
-	ret = con.InitEp(ep, this->eq);
+	ret = con->InitEp(ep, this->eq);
 	if (ret) {
 		goto err;
 	}
