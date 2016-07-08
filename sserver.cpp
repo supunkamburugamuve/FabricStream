@@ -20,9 +20,9 @@
 
 #include "sserver.h"
 
-SServer::SServer(RDMAOptions *opts) {
+SServer::SServer(RDMAOptions *opts, fi_info *hints) {
 	this->options = opts;
-	this->info_hints = NULL;
+	this->info_hints = hints;
 	this->pep = NULL;
 	this->info_pep = NULL;
 	this->eq = NULL;

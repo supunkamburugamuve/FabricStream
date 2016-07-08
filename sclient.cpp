@@ -19,9 +19,9 @@
 #include "sclient.h"
 #include "connection.h"
 
-SClient::SClient(RDMAOptions *opts) {
+SClient::SClient(RDMAOptions *opts, fi_info *hints) {
 	this->info = NULL;
-	this->info_hints = NULL;
+	this->info_hints = hints;
 	this->options = opts;
 	this->eq = NULL;
 	this->fabric = NULL;

@@ -10,7 +10,7 @@
 
 class SClient {
 public:
-	SClient(RDMAOptions *opts);
+	SClient(RDMAOptions *opts, fi_info *hints);
 	int Connect(void);
 	virtual ~SClient();
 private:

@@ -3,7 +3,7 @@
 
 class SServer {
 public:
-	SServer(RDMAOptions *opts);
+	SServer(RDMAOptions *opts, fi_info *hints);
 	void Free();
 	virtual ~SServer();
 
