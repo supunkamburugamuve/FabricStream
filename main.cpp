@@ -6,6 +6,8 @@
 #include "utils.h"
 #include "server.h"
 #include "client.h"
+#include "sclient.h"
+#include "sserver.h"
 
 using namespace std;
 
@@ -138,6 +140,105 @@ int main(int argc, char **argv) {
 	hints->mode = FI_LOCAL_MR | FI_RX_CQ_DATA;
 
 	if (options.dst_addr) {
+		SClient client(&options, hints);
+		client.Connect();
+		ret = client.ExchangeKeys(&remote);
+		if (ret) {
+			printf("Failed to exchange %d\n", ret);
+		} else {
+			printf("Exchanged keys\n");
+		}
+		ret = client.sync();
+		if (ret) {
+			printf("Failed to sync\n");
+		} else {
+			printf("synced\n");
+		}
+
+		for (int i = 0; i < 10000; i++) {
+			options.transfer_size = test_size[0].size;
+			ret = client.RMA(options.rma_op, options.transfer_size, &remote);
+			if (ret) {
+				printf("Failed to RMA \n");
+			}
+		}
+                printf("Done rma\n");
+		ret = client.sync();
+		if (ret) {
+			printf("Failed second sync");
+		}
+		ret = client.Finalize();
+		if (ret) {
+			printf("Failed Finalize");
+		}
+	} else {
+		SServer server(&options, hints);
+		server.Start();
+		server.Connect();
+		ret = server.ExchangeKeys(&remote);
+		if (ret) {
+			printf("Failed to exchange %d\n", ret);
+		} else {
+			printf("Exchanged keys\n");
+		}
+		ret = server.sync();
+		if (ret) {
+			printf("Failed to sync\n");
+		} else {
+            printf("synced\n");
+        }
+		for (int i = 0; i < 10000; i++) {
+			options.transfer_size = test_size[0].size;
+			ret = server.RMA(options.rma_op, options.transfer_size, &remote);
+			if (ret) {
+				printf("Failed to RMA \n");
+			}
+		}
+                printf("Done rma\n");
+		ret = server.sync();
+		if (ret) {
+			printf("Failed second sync");
+		}
+		ret = server.Finalize();
+		if (ret) {
+			printf("Failed Finalize");
+		}
+	}
+
+    return 0;
+}
+
+int main2(int argc, char **argv) {
+	int op;
+	int ret = 0;
+	RDMAOptions options;
+	options.transfer_size = 100;
+	options.rma_op = FT_RMA_WRITE;
+	struct fi_info *hints = fi_allocinfo();
+    // parse the options
+    while ((op = getopt(argc, argv, "ho:" ADDR_OPTS INFO_OPTS)) != -1) {
+		switch (op) {
+		default:
+			rdma_parseinfo(op, optarg, hints);
+			rdma_parse_addr_opts(op, optarg, &options);
+			break;
+		case '?':
+		case 'h':
+			fprintf(stderr, "Help not implemented\n");
+			return 0;
+		}
+	}
+
+    if (optind < argc) {
+    	options.dst_addr = argv[optind];
+    	printf("dst addr: %s\n", options.dst_addr);
+    }
+
+	hints->ep_attr->type = FI_EP_MSG;
+	hints->caps = FI_MSG | FI_RMA;
+	hints->mode = FI_LOCAL_MR | FI_RX_CQ_DATA;
+
+	if (options.dst_addr) {
 		RDMACLient client(&options, hints);
 		client.ClientConnect();
 		ret = client.ExchangeKeys(&remote);
@@ -183,8 +284,8 @@ int main(int argc, char **argv) {
 		if (ret) {
 			printf("Failed to sync\n");
 		} else {
-                        printf("synced\n");
-                }
+            printf("synced\n");
+        }
 		for (int i = 0; i < 10000; i++) {
 			options.transfer_size = test_size[0].size;
 			ret = server.RMA(options.rma_op, options.transfer_size, &remote);

@@ -15,6 +15,22 @@ public:
 	 * Accept new connections
 	 */
 	int Connect(void);
+	/**
+	 * Exchange the keys
+	 */
+	int ExchangeKeys(struct fi_rma_iov *peer_iov);
+
+	/**
+	 * Sync
+	 */
+	int sync();
+	/**
+	 * RMA
+	 */
+	ssize_t RMA(enum rdma_rma_opcodes op, size_t size,
+			struct fi_rma_iov *remote);
+
+	int Finalize(void);
 private:
 	RDMAOptions *options;
 	// hints to be used to obtain fabric information
@@ -29,6 +45,8 @@ private:
     struct fi_eq_attr eq_attr;
     // the fabric
     struct fid_fabric *fabric;
+    // connections
+    Connection *con;
 };
 
 

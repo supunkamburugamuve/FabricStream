@@ -28,6 +28,7 @@ public:
     		struct fi_rma_iov *remote);
     ssize_t RMA(enum rdma_rma_opcodes op, size_t size,
 			struct fi_rma_iov *remote);
+    int Finalize(void);
 private:
 	// options for initialization
 	RDMAOptions *options;
@@ -89,6 +90,7 @@ private:
     			    uint64_t total, int timeout);
     int SpinForCompletion(struct fid_cq *cq, uint64_t *cur,
     			    uint64_t total, int timeout);
+    int AllocMsgs(void);
 };
 
 #endif /* CONNECTION_H_ */

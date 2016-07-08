@@ -27,6 +27,7 @@ SClient::SClient(RDMAOptions *opts, fi_info *hints) {
 	this->fabric = NULL;
 	this->eq_attr = {};
 	this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
+	this->con = NULL;
 }
 
 SClient::~SClient() {
@@ -109,4 +110,32 @@ int SClient::Connect(void) {
 
 	printf("COnnection established\n");
 	return 0;
+}
+
+int SClient::ExchangeKeys(struct fi_rma_iov *peer_iov) {
+	if (this->con) {
+		return con->ExchangeKeys(peer_iov);
+	}
+	return EXIT_FAILURE;
+}
+
+int SClient::sync(void) {
+	if (this->con) {
+		return con->sync();
+	}
+	return EXIT_FAILURE;
+}
+
+ssize_t SClient::RMA(enum rdma_rma_opcodes op, size_t size, fi_rma_iov *remote) {
+	if (this->con) {
+		return con->RMA(op, size, remote);
+	}
+	return EXIT_FAILURE;
+}
+
+int SClient::Finalize(void) {
+	if (this->con) {
+		return con->Finalize();
+	}
+	return EXIT_FAILURE;
 }

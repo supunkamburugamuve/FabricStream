@@ -12,6 +12,22 @@ class SClient {
 public:
 	SClient(RDMAOptions *opts, fi_info *hints);
 	int Connect(void);
+	/**
+	 * Exchange keys with the peer
+	 */
+	int ExchangeKeys(struct fi_rma_iov *peer_iov);
+	/**
+	 * Sync
+	 */
+	int sync();
+	/**
+	 * RMA
+	 */
+	ssize_t RMA(enum rdma_rma_opcodes op, size_t size,
+			struct fi_rma_iov *remote);
+
+	int Finalize(void);
+
 	virtual ~SClient();
 private:
 	// options for initialization
@@ -26,6 +42,8 @@ private:
 	struct fi_eq_attr eq_attr;
 	// the fabric
 	struct fid_fabric *fabric;
+	// the connection
+	Connection *con;
 };
 
 #endif /* SCLIENT_H_ */

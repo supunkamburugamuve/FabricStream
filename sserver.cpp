@@ -30,6 +30,8 @@ SServer::SServer(RDMAOptions *opts, fi_info *hints) {
 	this->eq_attr = {};
 	// initialize this attribute, search weather this is correct
     this->eq_attr.wait_obj = FI_WAIT_UNSPEC;
+
+    this->con = NULL;
 }
 
 void SServer::Free() {
@@ -180,3 +182,32 @@ err:
 	fi_reject(pep, entry.info->handle, NULL, 0);
 	return ret;
 }
+
+int SServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
+	if (this->con) {
+		return con->ExchangeKeys(peer_iov);
+	}
+	return EXIT_FAILURE;
+}
+
+int SServer::sync(void) {
+	if (this->con) {
+		return con->sync();
+	}
+	return EXIT_FAILURE;
+}
+
+ssize_t SServer::RMA(enum rdma_rma_opcodes op, size_t size, fi_rma_iov *remote) {
+	if (this->con) {
+		return con->RMA(op, size, remote);
+	}
+	return EXIT_FAILURE;
+}
+
+int SServer::Finalize(void) {
+	if (this->con) {
+		return con->Finalize();
+	}
+	return EXIT_FAILURE;
+}
+
