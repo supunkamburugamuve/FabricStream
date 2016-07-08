@@ -37,7 +37,7 @@ private:
   // the fabric
   struct fid_fabric *fabric;
   // event queue attribute
-  struct fi_eq_attr eq_attr = {};
+  struct fi_eq_attr eq_attr;
   // the event queue to listen on
   struct fid_eq *eq;
   // fabric domain we are working with

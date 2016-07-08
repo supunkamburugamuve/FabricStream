@@ -63,9 +63,6 @@ Connection::Connection(RDMAOptions *opts, struct fi_info *info_hints,
 
 	this->ft_skip_mr = 0;
 
-	// get the information
-	// rdma_utils_get_info(this->options, hints, &this->info);
-
 	this->cq_attr.wait_obj = FI_WAIT_NONE;
 	this->cntr_attr.events = FI_CNTR_EVENTS_COMP;
 	this->cntr_attr.wait_obj = FI_WAIT_NONE;
