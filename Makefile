@@ -5,8 +5,8 @@ INC=-I/N/u/skamburu/projects/fabbuild/fab/include
 main: main.o utils.o server.o client.o
 	$(CC) $(CFLAGS) main.o utils.o server.o client.o -o main $(LDFLAGS)
 
-main.o: main.cpp server.cpp client.cpp utils.cpp 
-	${CC} $(CFLAGS) $(INC) -c main.cpp server.cpp utils.cpp client.cpp
+main.o: main.cpp server.cpp client.cpp utils.cpp  sserver.cpp sclient.cpp
+	${CC} $(CFLAGS) $(INC) -c main.cpp server.cpp utils.cpp client.cpp sserver.cpp sclient.cpp
 server.o: utils.cpp server.cpp
 	${CC} ${CFLAGS} $(INC) -c utils.cpp server.cpp	
 client.o: utils.cpp client.cpp
