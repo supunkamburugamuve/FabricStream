@@ -82,8 +82,8 @@ private:
 
 	int timeout;
 
-    ssize_t PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context* ctx);
-    ssize_t PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx);
+    ssize_t PostTX(size_t size, struct fi_context* ctx);
+    ssize_t PostRX(size_t size, struct fi_context* ctx);
     int GetTXComp(uint64_t total);
     int GetRXComp(uint64_t total);
     int GetCQComp(struct fid_cq *cq, uint64_t *cur,

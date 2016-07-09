@@ -474,15 +474,15 @@ int Connection::GetTXComp(uint64_t total) {
 	return ret;
 }
 
-ssize_t Connection::PostTX(struct fid_ep *ep, fi_addr_t fi_addr, size_t size, struct fi_context* ctx) {
+ssize_t Connection::PostTX(size_t size, struct fi_context* ctx) {
 	if (info_hints->caps & FI_TAGGED) {
 		FT_POST(fi_tsend, GetTXComp, tx_seq, "transmit", ep,
 				tx_buf, size + rdma_utils_tx_prefix_size(info), fi_mr_desc(mr),
-				fi_addr, tx_seq, ctx);
+				this->remote_fi_addr, tx_seq, ctx);
 	} else {
 		FT_POST(fi_send, GetTXComp, tx_seq, "transmit", ep,
 				tx_buf,	size + rdma_utils_tx_prefix_size(info), fi_mr_desc(mr),
-				fi_addr, ctx);
+				this->remote_fi_addr, ctx);
 	}
 	return 0;
 }
@@ -493,7 +493,7 @@ ssize_t Connection::TX(size_t size) {
 	if (rdma_utils_check_opts(options, FT_OPT_VERIFY_DATA | FT_OPT_ACTIVE))
 		rdma_utils_fill_buf((char *) tx_buf + rdma_utils_tx_prefix_size(info), size);
 
-	ret = PostTX(ep, remote_fi_addr, size, &this->tx_ctx);
+	ret = PostTX(size, &this->tx_ctx);
 	if (ret)
 		return ret;
 
@@ -501,13 +501,13 @@ ssize_t Connection::TX(size_t size) {
 	return ret;
 }
 
-ssize_t Connection::PostRX(struct fid_ep *ep, size_t size, struct fi_context* ctx) {
+ssize_t Connection::PostRX(size_t size, struct fi_context* ctx) {
 	if (info_hints->caps & FI_TAGGED) {
-		FT_POST(fi_trecv, GetRXComp, rx_seq, "receive", ep, rx_buf,
+		FT_POST(fi_trecv, GetRXComp, rx_seq, "receive", this->ep, rx_buf,
 				MAX(size, FT_MAX_CTRL_MSG) + rdma_utils_rx_prefix_size(info),
 				fi_mr_desc(mr), 0, rx_seq, 0, ctx);
 	} else {
-		FT_POST(fi_recv, GetRXComp, rx_seq, "receive", ep, rx_buf,
+		FT_POST(fi_recv, GetRXComp, rx_seq, "receive", this->ep, rx_buf,
 				MAX(size, FT_MAX_CTRL_MSG) + rdma_utils_rx_prefix_size(info),
 				fi_mr_desc(mr),	0, ctx);
 	}
@@ -532,7 +532,7 @@ ssize_t Connection::RX(size_t size) {
 	 * sizes. ft_sync() makes use of ft_rx() and gets called in tests just before
 	 * message size is updated. The recvs posted are always for the next incoming
 	 * message */
-	ret = PostRX(this->ep, this->rx_size, &this->rx_ctx);
+	ret = PostRX(this->rx_size, &this->rx_ctx);
 	return ret;
 }
 
