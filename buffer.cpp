@@ -21,7 +21,7 @@ int Buffer::Init(bool align) {
 	uint32_t i = 0;
 	int alignment = 1;
 	int ret;
-	this->buffers = (void *)malloc(sizeof(void *) * no_bufs);
+	this->buffers = (void **)malloc(sizeof(void *) * no_bufs);
 	this->content_sizes = (uint64_t *)malloc(sizeof(uint64_t) * no_bufs);
 	for (i = 0; i < no_bufs; i++) {
 		if (align) {
