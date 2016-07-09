@@ -1,6 +1,8 @@
 #ifndef CONNECTION_H_
 #define CONNECTION_H_
 
+#include "buffer.h"
+
 class Connection {
 public:
 	Connection(RDMAOptions *opts, struct fi_info *info_hints,
