@@ -18,7 +18,7 @@ Buffer::Buffer(uint64_t buf_size, uint32_t no_bufs) {
 }
 
 int Buffer::Init(bool align) {
-	int i = 0;
+	uint32_t i = 0;
 	int alignment = 1;
 	int ret;
 	this->buffers = (void *)malloc(sizeof(void *) * no_bufs);
@@ -40,7 +40,7 @@ int Buffer::Init(bool align) {
 		}
 		memset(this->buffers[i], 0, buf_size);
 	}
-	this->wr_ids = malloc(sizeof(uint64_t) * no_bufs);
+	this->wr_ids = (uint64_t *)malloc(sizeof(uint64_t) * no_bufs);
 	this->head = 0;
 	this->tail = 0;
 	return 0;
@@ -54,7 +54,7 @@ int Buffer::Increment(int size, int current) {
 }
 
 bool Buffer::IncrementHead() {
-	int tail_previous = this->tail == 0 ? this->no_bufs - 1 : this->tail - 1;
+	uint32_t tail_previous = this->tail == 0 ? this->no_bufs - 1 : this->tail - 1;
 	if (this->head != tail_previous) {
 		this->head = this->head != this->no_bufs - 1 ? this->head + 1 : 0;
 		return true;

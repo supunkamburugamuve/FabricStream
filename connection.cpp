@@ -293,7 +293,7 @@ int Connection::InitEp(struct fid_ep *ep, struct fid_eq *eq) {
 	}
 	if (this->info->rx_attr->op_flags != FI_MULTI_RECV) {
 		/* Initial receive will get remote address for unconnected EPs */
-		ret = PostRX(ep, MAX(rx_size, FT_MAX_CTRL_MSG), &rx_ctx);
+		ret = PostRX(MAX(rx_size, FT_MAX_CTRL_MSG), &rx_ctx);
 		if (ret) {
 			return ret;
 		}
@@ -639,7 +639,7 @@ int Connection::ExchangeKeysClient(struct fi_rma_iov *peer_iov) {
 
 	rma_iov = (fi_rma_iov *)(static_cast<char *>(rx_buf) + rdma_utils_rx_prefix_size(info));
 	*peer_iov = *rma_iov;
-	ret = PostRX(ep, rx_size, &rx_ctx);
+	ret = PostRX(rx_size, &rx_ctx);
 	if (ret) {
 		printf("Failed to post RX\n");
 		return ret;
