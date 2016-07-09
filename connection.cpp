@@ -159,7 +159,6 @@ int Connection::AllocateActiveResources() {
 
 int Connection::AllocateBuffers(void) {
 	int ret;
-	long alignment = 1;
 	RDMAOptions *opts = this->options;
 	bool align = false;
 
@@ -597,7 +596,7 @@ int Connection::ExchangeKeysServer(struct fi_rma_iov *peer_iov) {
 
 	rma_iov = (fi_rma_iov *)(static_cast<char *>(rx_buf) + rdma_utils_rx_prefix_size(info));
 	*peer_iov = *rma_iov;
-	ret = PostRX(ep, rx_size, &rx_ctx);
+	ret = PostRX(rx_size, &rx_ctx);
 	if (ret) {
 		printf("Failed to post RX\n");
 		return ret;
