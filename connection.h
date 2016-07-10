@@ -60,9 +60,11 @@ private:
 	// address vector
 	struct fid_av *av;
 
-
+	// cq attribute for getting completion notifications
 	struct fi_cq_attr cq_attr;
+	// cntr attribute for getting counter notifications
 	struct fi_cntr_attr cntr_attr;
+	// vector attribute for getting completion notifications
 	struct fi_av_attr av_attr;
 
 	struct fid_cq *txcq, *rxcq;
