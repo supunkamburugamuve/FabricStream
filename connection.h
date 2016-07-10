@@ -21,19 +21,28 @@ public:
 	/**
 	 * Exchange keys with the peer
 	 */
-    int ExchangeKeysServer(struct fi_rma_iov *peer_iov);
-    int ExchangeKeysClient(struct fi_rma_iov *peer_iov);
+    int ExchangeKeysServer();
+    int ExchangeKeysClient();
     int sync();
     /**
      * Post a message
      */
     ssize_t PostRMA(enum rdma_rma_opcodes op, size_t size,
     		struct fi_rma_iov *remote);
+    ssize_t PostRMA(enum rdma_rma_opcodes op, size_t size, void *buf);
     ssize_t RMA(enum rdma_rma_opcodes op, size_t size,
 			struct fi_rma_iov *remote);
 
     ssize_t TX(size_t size);
     ssize_t RX(size_t size);
+    /**
+     * Send the content in the buffer. Use multiple buffers if needed to send
+     */
+    int send(uint8_t *buf, size_t size);
+    /**
+     * Receive content in to the buffer.
+     */
+    int receive(uint8_t *buf, size_t buf_size, size_t *read);
     int Finalize(void);
 private:
 	// options for initialization
@@ -81,6 +90,9 @@ private:
 	uint64_t tx_seq, rx_seq, tx_cq_cntr, rx_cq_cntr;
 
 	fi_addr_t remote_fi_addr;
+
+	// remote address
+	struct fi_rma_iov remote;
 
 	int timeout;
 

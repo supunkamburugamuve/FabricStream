@@ -21,24 +21,29 @@ int Buffer::Init(bool align) {
 	uint32_t i = 0;
 	int alignment = 1;
 	int ret;
+	uint64_t size = 0;
 	this->buffers = (void **)malloc(sizeof(void *) * no_bufs);
 	this->content_sizes = (uint64_t *)malloc(sizeof(uint64_t) * no_bufs);
-	for (i = 0; i < no_bufs; i++) {
-		if (align) {
-			alignment = sysconf(_SC_PAGESIZE);
-			if (alignment < 0) {
-				return 1;
-			}
-			buf_size += alignment;
+
+	if (align) {
+		alignment = sysconf(_SC_PAGESIZE);
+		if (alignment < 0) {
+			return 1;
+		}
+		buf_size += alignment;
+		for (i = 0; i < no_bufs; i++) {
 			ret = posix_memalign(&this->buffers[i], (size_t) alignment, buf_size);
 			if (ret) {
 				printf("posix_memalign %d\n", ret);
 				return 1;
 			}
-		} else {
-			this->buffers[i] = (void *)malloc(sizeof(uint8_t) * buf_size);
+			memset(this->buffers[i], 0, buf_size);
 		}
-		memset(this->buffers[i], 0, buf_size);
+	} else {
+		for (i = 0; i < no_bufs; i++) {
+			this->buffers[i] = (void *)malloc(sizeof(uint8_t) * buf_size);
+			memset(this->buffers[i], 0, buf_size);
+		}
 	}
 	this->wr_ids = (uint64_t *)malloc(sizeof(uint64_t) * no_bufs);
 	this->head = 0;
@@ -49,7 +54,7 @@ int Buffer::Init(bool align) {
 Buffer::~Buffer() {
 }
 
-int Buffer::Increment(int size, int current) {
+int increment(int size, int current) {
 	return size - 1 == current ? 0 : current + 1;
 }
 
@@ -70,4 +75,26 @@ bool Buffer::IncrementTail() {
 	} else {
 		return false;
 	}
+}
+
+void Buffer::Free() {
+	int i = 0;
+	if (this->buffers) {
+		free(this->buffers);
+	}
+	if (this->content_sizes) {
+		free(this->content_sizes);
+	}
+	for (i = 0; i < no_bufs; i++) {
+		free(this->buffers[i]);
+	}
+	if (this->wr_ids) {
+		free(this->wr_ids);
+	}
+}
+
+uint64_t Buffer::GetFreeSpace() {
+	// get the total free space available
+	int free_slots = this->no_bufs - abs(this->head - this->tail);
+	return free_slots * this->buf_size;
 }

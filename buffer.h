@@ -8,9 +8,16 @@ public:
 	Buffer(uint64_t buf_size, uint32_t no_bufs);
 	int Init(bool align);
 	virtual ~Buffer();
-	int Increment(int size, int current);
+	// increment the head
 	bool IncrementHead();
+	// increment the tail
 	bool IncrementTail();
+	// get the free space available in the buffers
+	uint64_t GetFreeSpace();
+	// get the current buffer, to be used, if this buffer is used
+	// the head should be incremented
+	void *GetBuffer();
+	void Free();
 private:
 	// the list of buffers
 	void **buffers;

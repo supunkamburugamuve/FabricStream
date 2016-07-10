@@ -75,6 +75,7 @@ Connection::Connection(RDMAOptions *opts, struct fi_info *info_hints,
 	this->av_attr.count = 1;
 
 	this->remote_fi_addr = FI_ADDR_UNSPEC;
+	this->remote = {};
 
 	this->timeout = -1;
 }
@@ -336,14 +337,16 @@ int Connection::SpinForCompletion(struct fid_cq *cq, uint64_t *cur,
 	struct timespec a, b;
 	int ret;
 
-	if (timeout >= 0)
+	if (timeout >= 0) {
 		clock_gettime(CLOCK_MONOTONIC, &a);
+	}
 
 	while (total - *cur > 0) {
 		ret = fi_cq_read(cq, &comp, 1);
 		if (ret > 0) {
-			if (timeout >= 0)
+			if (timeout >= 0) {
 				clock_gettime(CLOCK_MONOTONIC, &a);
+			}
 
 			(*cur)++;
 		} else if (ret < 0 && ret != -FI_EAGAIN) {
@@ -370,10 +373,12 @@ int Connection::WaitForCompletion(struct fid_cq *cq, uint64_t *cur,
 
 	while (total - *cur > 0) {
 		ret = fi_cq_sread(cq, &comp, 1, NULL, timeout);
-		if (ret > 0)
+		if (ret > 0) {
 			(*cur)++;
-		else if (ret < 0 && ret != -FI_EAGAIN)
+		}
+		else if (ret < 0 && ret != -FI_EAGAIN) {
 			return ret;
+		}
 	}
 
 	return 0;
@@ -395,8 +400,9 @@ int Connection::FDWaitForComp(struct fid_cq *cq, uint64_t *cur,
 		ret = fi_trywait(fabric, fids, 1);
 		if (ret == FI_SUCCESS) {
 			ret = rdma_utils_poll_fd(fd, timeout);
-			if (ret && ret != -FI_EAGAIN)
+			if (ret && ret != -FI_EAGAIN) {
 				return ret;
+			}
 		}
 
 		ret = fi_cq_read(cq, &comp, 1);
@@ -493,8 +499,9 @@ ssize_t Connection::TX(size_t size) {
 		rdma_utils_fill_buf((char *) tx_buf + rdma_utils_tx_prefix_size(info), size);
 
 	ret = PostTX(size, &this->tx_ctx);
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	ret = GetTXComp(tx_seq);
 	return ret;
@@ -562,6 +569,32 @@ ssize_t Connection::PostRMA(enum rdma_rma_opcodes op, size_t size,
 	return 0;
 }
 
+ssize_t Connection::PostRMA(enum rdma_rma_opcodes op, size_t size, void *buf) {
+	switch (op) {
+	case FT_RMA_WRITE:
+		FT_POST(fi_write, GetTXComp, tx_seq, "fi_write", ep, buf,
+				size, fi_mr_desc(mr), remote_fi_addr,
+				remote.addr, remote.key, ep);
+		break;
+	case FT_RMA_WRITEDATA:
+		FT_POST(fi_writedata, GetTXComp, tx_seq, "fi_writedata", ep,
+				buf, size, fi_mr_desc(mr),
+				remote_cq_data,	remote_fi_addr,	remote.addr,
+				remote.key, ep);
+		break;
+	case FT_RMA_READ:
+		FT_POST(fi_read, GetTXComp, tx_seq, "fi_read", ep, buf,
+				size, fi_mr_desc(mr), remote_fi_addr,
+				remote.addr, remote.key, ep);
+		break;
+	default:
+		printf("Unknown RMA op type\n");
+		return EXIT_FAILURE;
+	}
+
+	return 0;
+}
+
 ssize_t Connection::RMA(enum rdma_rma_opcodes op, size_t size,
 		struct fi_rma_iov *remote) {
 	int ret;
@@ -583,7 +616,8 @@ ssize_t Connection::RMA(enum rdma_rma_opcodes op, size_t size,
 	return 0;
 }
 
-int Connection::ExchangeKeysServer(struct fi_rma_iov *peer_iov) {
+int Connection::ExchangeKeysServer() {
+	struct fi_rma_iov *peer_iov = &this->remote;
 	struct fi_rma_iov *rma_iov;
 	int ret;
     printf("rx_seq tx_seq %lu %lu prefix_size %lu\n", rx_seq, tx_seq, rdma_utils_rx_prefix_size(info));
@@ -615,7 +649,8 @@ int Connection::ExchangeKeysServer(struct fi_rma_iov *peer_iov) {
 	return ret;
 }
 
-int Connection::ExchangeKeysClient(struct fi_rma_iov *peer_iov) {
+int Connection::ExchangeKeysClient() {
+	struct fi_rma_iov *peer_iov = &this->remote;
 	struct fi_rma_iov *rma_iov;
 	int ret;
 	printf("rx_seq tx_seq %lu %lu prefix_size %lu\n", rx_seq, tx_seq, rdma_utils_rx_prefix_size(info));
@@ -656,6 +691,48 @@ int Connection::sync() {
 	ret = TX(1);
 	return ret;
 }
+
+int Connection::receive(uint8_t *buf, size_t buf_size, size_t *read) {
+
+}
+
+int Connection::send(uint8_t *buf, size_t size) {
+	int ret;
+	// first lets get the available buffer
+	Buffer *sbuf = this->send_buf;
+	// now determine the buffer no to use
+	uint64_t sent_size = 0;
+	uint64_t current_size = 0;
+
+	uint64_t buf_size = sbuf->buf_size;
+	// we need to send everything buy using the buffers available
+	while (sent_size < size) {
+		uint64_t free_space = sbuf->GetFreeSpace();
+		// we have space in the buffers
+		if (free_space > 0) {
+			void *current_buf = sbuf->GetBuffer();
+
+			// now lets copy from send buffer to current buffer chosen
+			current_size = (size - sent_size) < buf_size ? size - sent_size : buf_size;
+			memcpy(current_buf, buf + sent_size, current_size);
+			// send the current buffer
+			PostRMA(FT_RMA_WRITE, current_size, current_buf);
+			// increment the head
+			sbuf->IncrementHead();
+		} else {
+			// we should wait for at least one completion
+			ret = GetTXComp(tx_seq);
+			if (ret) {
+				printf("Failed to get tx completion %d\n", ret);
+				return 1;
+			}
+			// now free the buffer
+			sbuf->IncrementTail();
+		}
+	}
+	return 0;
+}
+
 
 int Connection::Finalize(void) {
 	struct iovec iov;

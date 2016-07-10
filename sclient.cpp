@@ -146,3 +146,15 @@ int SClient::Finalize(void) {
 	}
 	return EXIT_FAILURE;
 }
+
+size_t SClient::Send(char *buf, size_t size) {
+
+
+	return 0;
+}
+
+int SClient::Receive(char *buf, size_t *size) {
+
+}
+
+
