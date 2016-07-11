@@ -67,7 +67,9 @@ private:
 	// vector attribute for getting completion notifications
 	struct fi_av_attr av_attr;
 
+	// transfer cq and receive cq
 	struct fid_cq *txcq, *rxcq;
+	// transfer counter and receive counter
 	struct fid_cntr *txcntr, *rxcntr;
 
 	struct fid_wait *waitset;
@@ -89,11 +91,18 @@ private:
 	struct fid_mr no_mr;
 
 	// sequence numbers for messages posted and received
-	uint64_t tx_seq, rx_seq, tx_cq_cntr, rx_cq_cntr;
-
-	fi_addr_t remote_fi_addr;
+	// transfer sequence number
+	uint64_t tx_seq;
+	// completed transfer requests
+	uint64_t tx_cq_cntr;
+	// receives posted
+	uint64_t rx_seq;
+	// receive completed
+	uint64_t rx_cq_cntr;
 
 	// remote address
+	fi_addr_t remote_fi_addr;
+	// remote address keys
 	struct fi_rma_iov remote;
 
 	int timeout;

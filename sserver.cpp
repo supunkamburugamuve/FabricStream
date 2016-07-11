@@ -184,7 +184,7 @@ err:
 
 int SServer::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 	if (this->con) {
-		return con->ExchangeKeysServer(peer_iov);
+		return con->ExchangeKeysServer();
 	}
 	return EXIT_FAILURE;
 }

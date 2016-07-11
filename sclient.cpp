@@ -114,7 +114,7 @@ int SClient::Connect(void) {
 
 int SClient::ExchangeKeys(struct fi_rma_iov *peer_iov) {
 	if (this->con) {
-		return con->ExchangeKeysClient(peer_iov);
+		return con->ExchangeKeysClient();
 	}
 	return EXIT_FAILURE;
 }
@@ -148,7 +148,6 @@ int SClient::Finalize(void) {
 }
 
 size_t SClient::Send(char *buf, size_t size) {
-
 
 	return 0;
 }

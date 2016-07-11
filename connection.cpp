@@ -620,7 +620,6 @@ int Connection::ExchangeKeysServer() {
 	struct fi_rma_iov *peer_iov = &this->remote;
 	struct fi_rma_iov *rma_iov;
 	int ret;
-    printf("rx_seq tx_seq %lu %lu prefix_size %lu\n", rx_seq, tx_seq, rdma_utils_rx_prefix_size(info));
 
 	ret = GetRXComp(rx_seq);
 	if (ret) {
@@ -635,7 +634,6 @@ int Connection::ExchangeKeysServer() {
 		printf("Failed to post RX\n");
 		return ret;
 	}
-    printf("domain %d  rx_buf %lu\n", info->domain_attr->mr_mode, (uintptr_t) rx_buf);
 	rma_iov = (fi_rma_iov *)(static_cast<char *>(tx_buf) + rdma_utils_tx_prefix_size(info));
 	rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
 			0 : (uintptr_t) rx_buf + rdma_utils_rx_prefix_size(info);
@@ -645,7 +643,6 @@ int Connection::ExchangeKeysServer() {
 		printf("Failed to TX\n");
 		return ret;
 	}
-	printf("Key %lu %lu %lu\n", peer_iov->addr, peer_iov->key, peer_iov->len);
 	return ret;
 }
 
@@ -653,7 +650,6 @@ int Connection::ExchangeKeysClient() {
 	struct fi_rma_iov *peer_iov = &this->remote;
 	struct fi_rma_iov *rma_iov;
 	int ret;
-	printf("rx_seq tx_seq %lu %lu prefix_size %lu\n", rx_seq, tx_seq, rdma_utils_rx_prefix_size(info));
 
 	rma_iov = (fi_rma_iov *)(static_cast<char *>(tx_buf) + rdma_utils_tx_prefix_size(info));
 	rma_iov->addr = info->domain_attr->mr_mode == FI_MR_SCALABLE ?
@@ -678,14 +674,13 @@ int Connection::ExchangeKeysClient() {
 		printf("Failed to post RX\n");
 		return ret;
 	}
-	printf("Key %lu %lu %lu\n", peer_iov->addr, peer_iov->key, peer_iov->len);
 	return ret;
 }
 
 int Connection::sync() {
 	int ret;
 	ret = RX(1);
-	if (ret)
+	if (ret)6
 		return ret;
 
 	ret = TX(1);
@@ -693,7 +688,12 @@ int Connection::sync() {
 }
 
 int Connection::receive(uint8_t *buf, size_t buf_size, size_t *read) {
+	int ret;
+    // now wait until a receive is completed
+	ret = GetRXComp(rx_seq);
 
+
+	return 0;
 }
 
 int Connection::send(uint8_t *buf, size_t size) {
@@ -711,7 +711,6 @@ int Connection::send(uint8_t *buf, size_t size) {
 		// we have space in the buffers
 		if (free_space > 0) {
 			void *current_buf = sbuf->GetBuffer();
-
 			// now lets copy from send buffer to current buffer chosen
 			current_size = (size - sent_size) < buf_size ? size - sent_size : buf_size;
 			memcpy(current_buf, buf + sent_size, current_size);
