@@ -680,8 +680,9 @@ int Connection::ExchangeKeysClient() {
 int Connection::sync() {
 	int ret;
 	ret = RX(1);
-	if (ret)6
+	if (ret) {
 		return ret;
+	}
 
 	ret = TX(1);
 	return ret;
