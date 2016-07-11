@@ -106,3 +106,7 @@ uint64_t Buffer::BufferSize() {
 uint32_t Buffer::NoOfBuffers() {
 	return this->no_bufs;
 }
+
+void *Buffer::GetBuffer() {
+	return this->buffers[this->head];
+}
