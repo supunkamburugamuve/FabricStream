@@ -98,3 +98,11 @@ uint64_t Buffer::GetFreeSpace() {
 	int free_slots = this->no_bufs - abs(this->head - this->tail);
 	return free_slots * this->buf_size;
 }
+
+uint64_t Buffer::BufferSize() {
+	return this->buf_size;
+}
+
+uint32_t Buffer::NoOfBuffers() {
+	return this->no_bufs;
+}

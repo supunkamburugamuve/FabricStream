@@ -17,6 +17,8 @@ public:
 	// get the current buffer, to be used, if this buffer is used
 	// the head should be incremented
 	void *GetBuffer();
+	uint64_t BufferSize();
+	uint32_t NoOfBuffers();
 	void Free();
 private:
 	// the list of buffers

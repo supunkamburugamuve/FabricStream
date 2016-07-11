@@ -704,7 +704,7 @@ int Connection::send(uint8_t *buf, size_t size) {
 	uint64_t sent_size = 0;
 	uint64_t current_size = 0;
 
-	uint64_t buf_size = sbuf->buf_size;
+	uint64_t buf_size = sbuf->BufferSize();
 	// we need to send everything buy using the buffers available
 	while (sent_size < size) {
 		uint64_t free_space = sbuf->GetFreeSpace();
