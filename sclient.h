@@ -21,6 +21,9 @@ public:
 	ssize_t RMA(enum rdma_rma_opcodes op, size_t size,
 			struct fi_rma_iov *remote);
 
+	size_t Send(char *buf, size_t size);
+	int Receive(char *buf, size_t *size);
+
 	int Finalize(void);
 
 	virtual ~SClient();

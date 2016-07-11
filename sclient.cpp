@@ -153,7 +153,7 @@ size_t SClient::Send(char *buf, size_t size) {
 }
 
 int SClient::Receive(char *buf, size_t *size) {
-
+	return 0;
 }
 
 
