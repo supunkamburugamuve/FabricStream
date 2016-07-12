@@ -12,6 +12,7 @@ Buffer::Buffer(uint64_t buf_size, uint32_t no_bufs) {
 	this->no_bufs = no_bufs;
 	this->head = 0;
 	this->tail = 0;
+	this->data_head = 0;
 	this->wr_ids = NULL;
 	this->content_sizes = NULL;
 	this->buffers = NULL;
@@ -110,4 +111,6 @@ uint32_t Buffer::NoOfBuffers() {
 void *Buffer::GetBuffer() {
 	return this->buffers[this->head];
 }
+
+
 
