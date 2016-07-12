@@ -10,20 +10,58 @@ struct message {
 
 class Buffer {
 public:
-	Buffer(uint64_t buf_size, uint32_t no_bufs);
+	Buffer(void *buf, uint64_t buf_size, uint32_t no_bufs);
 	int Init(bool align);
 	virtual ~Buffer();
 	// increment the head
 	bool IncrementHead();
 	// increment the tail
 	bool IncrementTail();
+	// increment the data head
+	bool IncrementDataHead();
 	// get the free space available in the buffers
 	uint64_t GetFreeSpace();
 	// get the current buffer, to be used, if this buffer is used
 	// the head should be incremented
-	void *GetBuffer();
-	uint64_t BufferSize();
-	uint32_t NoOfBuffers();
+	inline void* GetBuffer(int i) {
+		return buffers[i];
+	}
+	inline int64_t BufferSize() {
+		return buf_size;
+	};
+
+	inline uint32_t NoOfBuffers() {
+		return no_bufs;
+	}
+
+	inline uint32_t Head() {
+		return head;
+	}
+
+	inline uint32_t Tail() {
+		return tail;
+	}
+
+	inline uint32_t DataHead() {
+		return data_head;
+	}
+
+	inline uint32_t ContentSize(int i) {
+		return content_sizes[i];
+	}
+
+	inline void SetDataHead(uint32_t head) {
+		this->data_head = head;
+	}
+
+	inline void SetHead(uint32_t head) {
+		this->head = head;
+	}
+
+	inline void SetTail(uint32_t tail) {
+		this->tail = tail;
+	}
+
 	void Free();
 private:
 	// part of the buffer allocated to this buffer
@@ -32,9 +70,9 @@ private:
 	// part of a large buffer allocated
 	void **buffers;
 	// list of buffer sizes
-	uint64_t buf_size;
+	uint32_t buf_size;
 	// array of actual data sizes
-	uint64_t *content_sizes;
+	uint32_t *content_sizes;
 	// wr id for corresponding buffer
 	// we need this to keep track of the buffer after a
 	// completion is retrieved through cq

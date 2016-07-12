@@ -615,6 +615,8 @@ ssize_t Connection::RMA(enum rdma_rma_opcodes op, size_t size) {
 	return 0;
 }
 
+
+
 int Connection::ExchangeKeysServer() {
 	struct fi_rma_iov *peer_iov = &this->remote;
 	struct fi_rma_iov *rma_iov;
@@ -687,12 +689,121 @@ int Connection::sync() {
 	return ret;
 }
 
+/**
+ * Receive completions at least 'total' completions and until rx_seq
+ * completions
+ */
+int Connection::ReceiveCompletions(uint64_t min, uint64_t max) {
+	int ret = FI_SUCCESS;
+	struct fi_cq_err_entry comp;
+	struct timespec a, b;
+	uint64_t read;
+	// in case we are using completion queue
+	if (rxcq) {
+		if (timeout >= 0) {
+			clock_gettime(CLOCK_MONOTONIC, &a);
+		}
+
+		while (1) {
+			ret = fi_cq_read(rxcq, &comp, 1);
+			if (ret > 0) {
+				if (timeout >= 0) {
+					clock_gettime(CLOCK_MONOTONIC, &a);
+				}
+				rx_cq_cntr++;
+				// we've reached max
+				if (rx_cq_cntr == max) {
+					break;
+				}
+			} else if (ret < 0 && ret != -FI_EAGAIN) {
+				break;
+			} else if (min >= rx_cq_cntr) {
+				// we have read enough to return
+				break;
+			} else if (timeout >= 0) {
+				clock_gettime(CLOCK_MONOTONIC, &b);
+				if ((b.tv_sec - a.tv_sec) > timeout) {
+					fprintf(stderr, "%ds timeout expired\n", timeout);
+					ret = -FI_ENODATA;
+					break;
+				}
+			}
+		}
+
+		if (ret) {
+			if (ret == -FI_EAVAIL) {
+				ret = rdma_utils_cq_readerr(rxcq);
+				rx_cq_cntr++;
+			} else {
+				printf("ft_get_cq_comp %d\n", ret);
+			}
+		}
+		return 0;
+	} else if (rxcntr) { // we re using the counter
+		while (1) {
+			read = fi_cntr_read(rxcntr);
+			if (read < min) {
+				ret = fi_cntr_wait(rxcntr, min, timeout);
+				rx_cq_cntr = read;
+				if (ret) {
+					printf("fi_cntr_wait %d\n", ret);
+					break;
+				} else {
+					// we read up to min
+					rx_cq_cntr = min;
+				}
+			} else {
+				// we read something
+				if (read > rx_cq_cntr) {
+					rx_cq_cntr = read;
+				} else {
+					// nothing new is read, so break
+					break;
+				}
+			}
+		}
+	} else {
+		printf("Trying to get a RX completion when no RX CQ or counter were opened");
+		ret = -FI_EOTHER;
+	}
+	return ret;
+}
+
 int Connection::receive() {
 	int ret;
+	Buffer *sbuf = this->recv_buf;
+	uint32_t i = 0, data_head;
+	uint32_t buffers = sbuf->NoOfBuffers();
     // now wait until a receive is completed
-	ret = GetRXComp(rx_cq_cntr + 1);
+	// change this to receive multiple
+	ret = ReceiveCompletions(rx_cq_cntr + 1, rx_seq);
 	// ok a receive is completed
 	// mark the buffers with the data
+	// now update the buffer according to the rx_cq_cntr and rx_cq
+	data_head = rx_cq_cntr % buffers;
+	sbuf->SetDataHead(data_head);
+	return 0;
+}
+
+int Connection::WriteBuffers() {
+	int ret = 0;
+	uint64_t written_size = 0;
+	uint32_t i = 0;
+	uint32_t size = 0;
+
+	Buffer *sbuf = this->send_buf;
+	// now go through the buffers
+	uint32_t head = sbuf->Head();
+	uint32_t data_head = sbuf->DataHead();
+	// send the content in the buffers
+	for (i = head; i < data_head; i++) {
+		void *buf = sbuf->GetBuffer(i);
+		size = sbuf->ContentSize(i);
+		ret = PostRMA(FT_RMA_WRITE, size, buf);
+		if (ret) {
+			return 1;
+		}
+	}
 	return 0;
 }
 

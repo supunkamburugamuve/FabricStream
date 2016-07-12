@@ -7,7 +7,8 @@
 
 #include "buffer.h"
 
-Buffer::Buffer(uint64_t buf_size, uint32_t no_bufs) {
+Buffer::Buffer(void *buf, uint64_t buf_size, uint32_t no_bufs) {
+	this->buf = buf;
 	this->buf_size = buf_size;
 	this->no_bufs = no_bufs;
 	this->head = 0;
@@ -22,9 +23,9 @@ int Buffer::Init(bool align) {
 	uint32_t i = 0;
 	int alignment = 1;
 	int ret;
-	uint64_t size = 0;
+	uint32_t size = 0;
 	this->buffers = (void **)malloc(sizeof(void *) * no_bufs);
-	this->content_sizes = (uint64_t *)malloc(sizeof(uint64_t) * no_bufs);
+	this->content_sizes = (uint32_t *)malloc(sizeof(uint32_t) * no_bufs);
 
 	if (align) {
 		alignment = sysconf(_SC_PAGESIZE);
@@ -100,17 +101,8 @@ uint64_t Buffer::GetFreeSpace() {
 	return free_slots * this->buf_size;
 }
 
-uint64_t Buffer::BufferSize() {
-	return this->buf_size;
-}
 
-uint32_t Buffer::NoOfBuffers() {
-	return this->no_bufs;
-}
 
-void *Buffer::GetBuffer() {
-	return this->buffers[this->head];
-}
 
 
 

@@ -37,6 +37,12 @@ public:
      * Send the content in the buffer. Use multiple buffers if needed to send
      */
     int WriteData(uint8_t *buf, size_t size);
+
+    /**
+     * Write the current buffers
+     */
+    int WriteBuffers();
+
     /**
      * Receive content in to the buffer.
      */
@@ -72,6 +78,7 @@ private:
 
 	struct fid_wait *waitset;
 
+	// receive fd and transmit fd
 	int rx_fd = -1, tx_fd = -1;
 
 	struct fi_context tx_ctx, rx_ctx;
@@ -117,6 +124,7 @@ private:
     			    uint64_t total, int timeout);
     int SpinForCompletion(struct fid_cq *cq, uint64_t *cur,
     			    uint64_t total, int timeout);
+    int ReceiveCompletions(uint64_t min, uint64_t max);
     int AllocMsgs(void);
     int AllocateBuffers(void);
 };
