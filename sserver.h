@@ -20,7 +20,7 @@ public:
 	/**
 	 * Exchange the keys
 	 */
-	int ExchangeKeys(struct fi_rma_iov *peer_iov);
+	int ExchangeKeys();
 
 	/**
 	 * Sync
@@ -29,8 +29,7 @@ public:
 	/**
 	 * RMA
 	 */
-	ssize_t RMA(enum rdma_rma_opcodes op, size_t size,
-			struct fi_rma_iov *remote);
+	ssize_t RMA(enum rdma_rma_opcodes op, size_t size);
 
 	int Finalize(void);
 private:

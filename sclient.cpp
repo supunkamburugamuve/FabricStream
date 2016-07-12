@@ -112,7 +112,7 @@ int SClient::Connect(void) {
 	return 0;
 }
 
-int SClient::ExchangeKeys(struct fi_rma_iov *peer_iov) {
+int SClient::ExchangeKeys() {
 	if (this->con) {
 		return con->ExchangeKeysClient();
 	}
@@ -133,9 +133,9 @@ int SClient::sync(void) {
 	return EXIT_FAILURE;
 }
 
-ssize_t SClient::RMA(enum rdma_rma_opcodes op, size_t size, fi_rma_iov *remote) {
+ssize_t SClient::RMA(enum rdma_rma_opcodes op, size_t size) {
 	if (this->con) {
-		return con->RMA(op, size, remote);
+		return con->RMA(op, size);
 	}
 	return EXIT_FAILURE;
 }

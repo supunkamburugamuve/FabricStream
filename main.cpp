@@ -13,7 +13,7 @@ using namespace std;
 
 #define FT_PRINT_OPTS_USAGE(opt, desc) fprintf(stderr, " %-20s %s\n", opt, desc);
 
-static struct fi_rma_iov remote;
+// static struct fi_rma_iov remote;
 
 struct test_size_param {
 	int size;
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
 	if (options.dst_addr) {
 		SClient client(&options, hints);
 		client.Connect();
-		ret = client.ExchangeKeys(&remote);
+		ret = client.ExchangeKeys();
 		if (ret) {
 			printf("Failed to exchange %d\n", ret);
 		} else {
@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
 
 		for (int i = 0; i < 10000; i++) {
 			options.transfer_size = test_size[0].size;
-			ret = client.RMA(options.rma_op, options.transfer_size, &remote);
+			ret = client.RMA(options.rma_op, options.transfer_size);
 			if (ret) {
 				printf("Failed to RMA \n");
 			}
@@ -175,7 +175,7 @@ int main(int argc, char **argv) {
 		SServer server(&options, hints);
 		server.Start();
 		server.Connect();
-		ret = server.ExchangeKeys(&remote);
+		ret = server.ExchangeKeys();
 		if (ret) {
 			printf("Failed to exchange %d\n", ret);
 		} else {
@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
         }
 		for (int i = 0; i < 10000; i++) {
 			options.transfer_size = test_size[0].size;
-			ret = server.RMA(options.rma_op, options.transfer_size, &remote);
+			ret = server.RMA(options.rma_op, options.transfer_size);
 			if (ret) {
 				printf("Failed to RMA \n");
 			}

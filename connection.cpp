@@ -542,8 +542,8 @@ ssize_t Connection::RX(size_t size) {
 	return ret;
 }
 
-ssize_t Connection::PostRMA(enum rdma_rma_opcodes op, size_t size,
-		struct fi_rma_iov *remote) {
+ssize_t Connection::PostRMA(enum rdma_rma_opcodes op, size_t size) {
+	struct fi_rma_iov *remote = &this->remote;
 	switch (op) {
 	case FT_RMA_WRITE:
 		FT_POST(fi_write, GetTXComp, tx_seq, "fi_write", ep, tx_buf,
@@ -595,11 +595,10 @@ ssize_t Connection::PostRMA(enum rdma_rma_opcodes op, size_t size, void *buf) {
 	return 0;
 }
 
-ssize_t Connection::RMA(enum rdma_rma_opcodes op, size_t size,
-		struct fi_rma_iov *remote) {
+ssize_t Connection::RMA(enum rdma_rma_opcodes op, size_t size) {
 	int ret;
 
-	ret = PostRMA(op, size, remote);
+	ret = PostRMA(op, size, &remote);
 	if (ret)
 		return ret;
 
@@ -688,16 +687,16 @@ int Connection::sync() {
 	return ret;
 }
 
-int Connection::receive(uint8_t *buf, size_t buf_size, size_t *read) {
+int Connection::receive() {
 	int ret;
     // now wait until a receive is completed
-	ret = GetRXComp(rx_seq);
-
-
+	ret = GetRXComp(rx_cq_cntr + 1);
+	// ok a receive is completed
+	// mark the buffers with the data
 	return 0;
 }
 
-int Connection::send(uint8_t *buf, size_t size) {
+int Connection::WriteData(uint8_t *buf, size_t size) {
 	int ret;
 	// first lets get the available buffer
 	Buffer *sbuf = this->send_buf;

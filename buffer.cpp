@@ -110,3 +110,4 @@ uint32_t Buffer::NoOfBuffers() {
 void *Buffer::GetBuffer() {
 	return this->buffers[this->head];
 }
+
