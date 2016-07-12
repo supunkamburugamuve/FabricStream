@@ -148,6 +148,7 @@ int main(int argc, char **argv) {
 		} else {
 			printf("Exchanged keys\n");
 		}
+
 		ret = client.sync();
 		if (ret) {
 			printf("Failed to sync\n");
