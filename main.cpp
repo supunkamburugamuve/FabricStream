@@ -13,7 +13,7 @@ using namespace std;
 
 #define FT_PRINT_OPTS_USAGE(opt, desc) fprintf(stderr, " %-20s %s\n", opt, desc);
 
-// static struct fi_rma_iov remote;
+static struct fi_rma_iov remote;
 
 struct test_size_param {
 	int size;
