@@ -160,21 +160,39 @@ int Connection::AllocateActiveResources() {
 
 int Connection::AllocateBuffers(void) {
 	int ret;
+	long alignment = 1;
 	RDMAOptions *opts = this->options;
-	bool align = false;
 
-	size_t buffer_size = opts->buf_size;
-	if (buffer_size > info->ep_attr->max_msg_size) {
-		buffer_size = info->ep_attr->max_msg_size;
+	tx_size = opts->buf_size;
+	if (tx_size > info->ep_attr->max_msg_size) {
+		tx_size = info->ep_attr->max_msg_size;
 	}
-	buffer_size += rdma_utils_rx_prefix_size(this->info);
-	buffer_size = MAX(buffer_size, FT_MAX_CTRL_MSG);
+	rx_size = tx_size + rdma_utils_rx_prefix_size(this->info);
+	tx_size += rdma_utils_tx_prefix_size(this->info);
+	buf_size = MAX(tx_size, FT_MAX_CTRL_MSG) + MAX(rx_size, FT_MAX_CTRL_MSG);
 
-	recv_buf = new Buffer(NULL, buffer_size, opts->no_buffers);
-	send_buf = new Buffer(NULL, buffer_size, opts->no_buffers);
-	align = opts->options & FT_OPT_ALIGN ? true : false;
-	recv_buf->Init(align);
-	send_buf->Init(align);
+	if (opts->options & FT_OPT_ALIGN) {
+		alignment = sysconf(_SC_PAGESIZE);
+		if (alignment < 0)
+			return -errno;
+		buf_size += alignment;
+
+		ret = posix_memalign(&buf, (size_t) alignment, buf_size);
+		if (ret) {
+			printf("posix_memalign %d\n", ret);
+			return ret;
+		}
+	} else {
+		buf = malloc(buf_size);
+		if (!buf) {
+			perror("malloc");
+			return -FI_ENOMEM;
+		}
+	}
+	memset(buf, 0, buf_size);
+	rx_buf = buf;
+	tx_buf = (char *) buf + MAX(rx_size, FT_MAX_CTRL_MSG);
+	tx_buf = (void *) (((uintptr_t) tx_buf + alignment - 1) & ~(alignment - 1));
 
 	remote_cq_data = rdma_utils_init_cq_data(info);
 
@@ -189,6 +207,9 @@ int Connection::AllocateBuffers(void) {
 	} else {
 		mr = &no_mr;
 	}
+
+	this->send_buf = new Buffer(tx_buf, tx_size, opts->no_buffers);
+	this->recv_buf = new Buffer(rx_buf, rx_size, opts->no_buffers);
 	return 0;
 }
 

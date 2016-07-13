@@ -26,26 +26,9 @@ int Buffer::Init(bool align) {
 	uint32_t size = 0;
 	this->buffers = (void **)malloc(sizeof(void *) * no_bufs);
 	this->content_sizes = (uint32_t *)malloc(sizeof(uint32_t) * no_bufs);
-
-	if (align) {
-		alignment = sysconf(_SC_PAGESIZE);
-		if (alignment < 0) {
-			return 1;
-		}
-		buf_size += alignment;
-		for (i = 0; i < no_bufs; i++) {
-			ret = posix_memalign(&this->buffers[i], (size_t) alignment, buf_size);
-			if (ret) {
-				printf("posix_memalign %d\n", ret);
-				return 1;
-			}
-			memset(this->buffers[i], 0, buf_size);
-		}
-	} else {
-		for (i = 0; i < no_bufs; i++) {
-			this->buffers[i] = (void *)malloc(sizeof(uint8_t) * buf_size);
-			memset(this->buffers[i], 0, buf_size);
-		}
+	this->buf_size = this->buf_size / this->no_bufs;
+	for (i = 0; i < no_bufs; i++) {
+		this->buffers[i] = this->buf + buf_size * i;
 	}
 	this->wr_ids = (uint64_t *)malloc(sizeof(uint64_t) * no_bufs);
 	this->head = 0;
