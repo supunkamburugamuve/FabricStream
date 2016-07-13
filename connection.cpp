@@ -170,8 +170,8 @@ int Connection::AllocateBuffers(void) {
 	buffer_size += rdma_utils_rx_prefix_size(this->info);
 	buffer_size = MAX(buffer_size, FT_MAX_CTRL_MSG);
 
-	recv_buf = new Buffer(buffer_size, opts->no_buffers);
-	send_buf = new Buffer(buffer_size, opts->no_buffers);
+	recv_buf = new Buffer(NULL, buffer_size, opts->no_buffers);
+	send_buf = new Buffer(NULL, buffer_size, opts->no_buffers);
 	align = opts->options & FT_OPT_ALIGN ? true : false;
 	recv_buf->Init(align);
 	send_buf->Init(align);
@@ -860,6 +860,7 @@ int Connection::WriteData(uint8_t *buf, size_t size) {
 	// now determine the buffer no to use
 	uint64_t sent_size = 0;
 	uint64_t current_size = 0;
+	uint32_t head = 0;
 
 	uint64_t buf_size = sbuf->BufferSize();
 	// we need to send everything buy using the buffers available
@@ -867,7 +868,8 @@ int Connection::WriteData(uint8_t *buf, size_t size) {
 		uint64_t free_space = sbuf->GetFreeSpace();
 		// we have space in the buffers
 		if (free_space > 0) {
-			void *current_buf = sbuf->GetBuffer();
+			head = sbuf->Head();
+			void *current_buf = sbuf->GetBuffer(head);
 			// now lets copy from send buffer to current buffer chosen
 			current_size = (size - sent_size) < buf_size ? size - sent_size : buf_size;
 			memcpy(current_buf, buf + sent_size, current_size);
