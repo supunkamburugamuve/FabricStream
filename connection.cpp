@@ -636,8 +636,6 @@ ssize_t Connection::RMA(enum rdma_rma_opcodes op, size_t size) {
 	return 0;
 }
 
-
-
 int Connection::ExchangeKeysServer() {
 	struct fi_rma_iov *peer_iov = &this->remote;
 	struct fi_rma_iov *rma_iov;
@@ -851,6 +849,25 @@ int Connection::receive() {
 	// now update the buffer according to the rx_cq_cntr and rx_cq
 	data_head = rx_cq_cntr % buffers;
 	sbuf->SetDataHead(data_head);
+	return 0;
+}
+
+int Connection::CopyDataFromBuffer(int buf_no, void *buf, uint32_t size, uint32_t *read) {
+	// go through the buffers
+	Buffer *rbuf = this->recv_buf;
+	// get the tail
+	if (buf_no <= rbuf->data_head && buf_no > rbuf->tail) {
+		// skip the first 4 bytes
+		void *b = rbuf->GetBuffer(buf_no);
+		uint32_t r;
+		// first read the size
+		memcpy(&r, b, sizeof(r));
+		// next copy the buffer
+		memcpy(buf, b + sizeof(uint32_t), r);
+		*read = r;
+	} else {
+		*read = 0;
+	}
 	return 0;
 }
 

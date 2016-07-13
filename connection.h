@@ -43,6 +43,8 @@ public:
      */
     int WriteBuffers();
 
+    int CopyDataFromBuffer(int buf_no, void *buf, uint32_t size, uint32_t *read) ;
+
     /**
      * Receive content in to the buffer.
      */
