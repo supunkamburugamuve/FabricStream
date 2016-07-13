@@ -838,10 +838,14 @@ int Connection::ReceiveCompletions(uint64_t min, uint64_t max) {
 int Connection::receive() {
 	int ret;
 	Buffer *sbuf = this->recv_buf;
-	uint32_t i = 0, data_head;
+	uint32_t data_head;
 	uint32_t buffers = sbuf->NoOfBuffers();
     // now wait until a receive is completed
 	ret = ReceiveCompletions(rx_cq_cntr + 1, rx_seq);
+	if (ret < 0) {
+		printf("Failed to retrieve\n");
+		return 1;
+	}
 	// ok a receive is completed
 	// mark the buffers with the data
 	// now update the buffer according to the rx_cq_cntr and rx_cq
@@ -852,7 +856,6 @@ int Connection::receive() {
 
 int Connection::WriteBuffers() {
 	int ret = 0;
-	uint64_t written_size = 0;
 	uint32_t i = 0;
 	uint32_t size = 0;
 
