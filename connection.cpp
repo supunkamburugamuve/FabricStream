@@ -689,6 +689,51 @@ int Connection::sync() {
 	return ret;
 }
 
+int Connection::SendCompletions(uint64_t min, uint64_t max) {
+	int ret;
+	struct fi_cq_err_entry comp;
+	struct timespec a, b;
+
+	if (txcq) {
+		if (timeout >= 0) {
+			clock_gettime(CLOCK_MONOTONIC, &a);
+		}
+
+		while (tx_cq_cntr < max) {
+			ret = fi_cq_read(txcq, &comp, 1);
+			if (ret > 0) {
+				if (timeout >= 0) {
+					clock_gettime(CLOCK_MONOTONIC, &a);
+				}
+				tx_cq_cntr += ret;
+				if (tx_cq_cntr >= max) {
+					break;
+				}
+			} else if (ret < 0 && ret != -FI_EAGAIN) {
+				return ret;
+			} else if (min <= tx_cq_cntr && ret == -FI_EAGAIN) {
+				// we have read enough to return
+				break;
+			} else if (timeout >= 0) {
+				clock_gettime(CLOCK_MONOTONIC, &b);
+				if ((b.tv_sec - a.tv_sec) > timeout) {
+					fprintf(stderr, "%ds timeout expired\n", timeout);
+					return -FI_ENODATA;
+				}
+			}
+		}
+	} else if (txcntr) {
+		ret = fi_cntr_wait(txcntr, min, -1);
+		if (ret) {
+			printf("fi_cntr_wait %d\n", ret);
+		}
+	} else {
+		printf("Trying to get a TX completion when no TX CQ or counter were opened \n");
+		ret = -FI_EOTHER;
+	}
+	return ret;
+}
+
 /**
  * Receive completions at least 'total' completions and until rx_seq
  * completions
@@ -704,20 +749,20 @@ int Connection::ReceiveCompletions(uint64_t min, uint64_t max) {
 			clock_gettime(CLOCK_MONOTONIC, &a);
 		}
 
-		while (1) {
+		while (rx_cq_cntr < max	) {
 			ret = fi_cq_read(rxcq, &comp, 1);
 			if (ret > 0) {
 				if (timeout >= 0) {
 					clock_gettime(CLOCK_MONOTONIC, &a);
 				}
-				rx_cq_cntr++;
+				rx_cq_cntr += ret;
 				// we've reached max
-				if (rx_cq_cntr == max) {
+				if (rx_cq_cntr >= max) {
 					break;
 				}
 			} else if (ret < 0 && ret != -FI_EAGAIN) {
 				break;
-			} else if (min >= rx_cq_cntr) {
+			} else if (min <= rx_cq_cntr && ret == -FI_EAGAIN) {
 				// we have read enough to return
 				break;
 			} else if (timeout >= 0) {
@@ -775,7 +820,6 @@ int Connection::receive() {
 	uint32_t i = 0, data_head;
 	uint32_t buffers = sbuf->NoOfBuffers();
     // now wait until a receive is completed
-	// change this to receive multiple
 	ret = ReceiveCompletions(rx_cq_cntr + 1, rx_seq);
 	// ok a receive is completed
 	// mark the buffers with the data
@@ -803,6 +847,8 @@ int Connection::WriteBuffers() {
 		if (ret) {
 			return 1;
 		}
+		// now increment the buffer
+		sbuf->IncrementHead();
 	}
 	return 0;
 }
@@ -831,7 +877,7 @@ int Connection::WriteData(uint8_t *buf, size_t size) {
 			sbuf->IncrementHead();
 		} else {
 			// we should wait for at least one completion
-			ret = GetTXComp(tx_seq);
+			ret = SendCompletions(tx_cq_cntr + 1, tx_seq);
 			if (ret) {
 				printf("Failed to get tx completion %d\n", ret);
 				return 1;

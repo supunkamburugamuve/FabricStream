@@ -125,6 +125,7 @@ private:
     int SpinForCompletion(struct fid_cq *cq, uint64_t *cur,
     			    uint64_t total, int timeout);
     int ReceiveCompletions(uint64_t min, uint64_t max);
+    int SendCompletions(uint64_t min, uint64_t max);
     int AllocMsgs(void);
     int AllocateBuffers(void);
 };
