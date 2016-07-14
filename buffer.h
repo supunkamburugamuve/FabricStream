@@ -21,6 +21,10 @@ public:
 	bool IncrementDataHead();
 	// get the free space available in the buffers
 	uint64_t GetFreeSpace();
+	// get the space ready to be received by user
+	uint64_t GetReceiveReadySpace();
+	// get space ready to be posted to Hardware
+	uint64_t GetSendReadySpace();
 	// get the current buffer, to be used, if this buffer is used
 	// the head should be incremented
 	inline void* GetBuffer(int i) {

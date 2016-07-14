@@ -82,6 +82,19 @@ uint64_t Buffer::GetFreeSpace() {
 	return free_slots * this->buf_size;
 }
 
+// get the space ready to be received by user
+uint64_t Buffer::GetReceiveReadySpace() {
+	int ready_slots = this->no_bufs - abs(this->data_head - this->tail);
+	return ready_slots * this->buf_size;
+}
+
+// get space ready to be posted to Hardware
+uint64_t Buffer::GetSendReadySpace() {
+	int ready_slots = this->no_bufs - abs(this->data_head - this->head);
+	return ready_slots * this->buf_size;
+}
+
+
 
 
 
