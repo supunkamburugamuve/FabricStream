@@ -857,7 +857,7 @@ int Connection::CopyDataFromBuffer(int buf_no, void *buf, uint32_t size, uint32_
 	Buffer *rbuf = this->recv_buf;
 
 	// get the tail
-	if (buf_no <= rbuf->data_head && buf_no > rbuf->tail) {
+	if (buf_no <= rbuf->DataHead() && buf_no > rbuf->Tail()) {
 		// skip the first 4 bytes
 		void *b = rbuf->GetBuffer(buf_no);
 		uint64_t r;
