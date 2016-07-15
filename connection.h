@@ -45,6 +45,14 @@ public:
 
     int CopyDataFromBuffer(int buf_no, void *buf, uint32_t size, uint32_t *read) ;
 
+    inline Buffer *RecevBuffer() {
+    	return this->recv_buf;
+    }
+
+    inline Buffer *SendBuffer() {
+    	return this->send_buf;
+    }
+
     /**
      * Receive content in to the buffer.
      */
