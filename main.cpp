@@ -215,6 +215,7 @@ int send_recv(int argc, char **argv) {
 	RDMAOptions options;
 	options.transfer_size = 100;
 	options.rma_op = FT_RMA_WRITE;
+	Connection *con;
 	struct fi_info *hints = fi_allocinfo();
 	// parse the options
 	while ((op = getopt(argc, argv, "ho:" ADDR_OPTS INFO_OPTS)) != -1) {
@@ -255,6 +256,19 @@ int send_recv(int argc, char **argv) {
 		} else {
 			printf("synced\n");
 		}
+		con = client.GetConnection();
+		int values[1000];
+		uint8_t send_buf[4000];
+		// create an integer array with size 1000
+		for (int i = 0; i < 1000; i++) {
+			values[i] = i;
+		}
+		memcpy((uint8_t *)send_buf, (uint8_t *)values, 4000);
+		// now write this to buffer
+		for (int i = 0; i < 1000; i++) {
+			con->WriteData(send_buf, 4000);
+			con->WriteBuffers();
+		}
 
 		ret = client.sync();
 		if (ret) {
@@ -279,6 +293,19 @@ int send_recv(int argc, char **argv) {
 			printf("Failed to sync\n");
 		} else {
 			printf("synced\n");
+		}
+
+		int values[1000];
+		uint8_t send_buf[4000];
+		// create an integer array with size 1000
+		for (int i = 0; i < 1000; i++) {
+			values[i] = i;
+		}
+		memcpy((uint8_t *)send_buf, (uint8_t *)values, 4000);
+		// now write this to buffer
+		for (int i = 0; i < 1000; i++) {
+			con->WriteData(send_buf, 4000);
+			con->WriteBuffers();
 		}
 
 		ret = server.sync();

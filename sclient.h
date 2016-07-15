@@ -25,6 +25,10 @@ public:
 
 	int Finalize(void);
 
+	inline Connection *GetConnection() {
+		return con;
+	}
+
 	virtual ~SClient();
 private:
 	// options for initialization
