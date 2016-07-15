@@ -855,11 +855,12 @@ int Connection::receive() {
 int Connection::CopyDataFromBuffer(int buf_no, void *buf, uint32_t size, uint32_t *read) {
 	// go through the buffers
 	Buffer *rbuf = this->recv_buf;
+
 	// get the tail
 	if (buf_no <= rbuf->data_head && buf_no > rbuf->tail) {
 		// skip the first 4 bytes
 		void *b = rbuf->GetBuffer(buf_no);
-		uint32_t r;
+		uint64_t r;
 		// first read the size
 		memcpy(&r, b, sizeof(r));
 		// next copy the buffer
@@ -903,7 +904,7 @@ int Connection::WriteData(uint8_t *buf, size_t size) {
 	uint64_t current_size = 0;
 	uint32_t head = 0;
 
-	uint64_t buf_size = sbuf->BufferSize();
+	uint64_t buf_size = sbuf->BufferSize() - 4;
 	// we need to send everything buy using the buffers available
 	while (sent_size < size) {
 		uint64_t free_space = sbuf->GetFreeSpace();
@@ -913,7 +914,8 @@ int Connection::WriteData(uint8_t *buf, size_t size) {
 			void *current_buf = sbuf->GetBuffer(head);
 			// now lets copy from send buffer to current buffer chosen
 			current_size = (size - sent_size) < buf_size ? size - sent_size : buf_size;
-			memcpy(current_buf, buf + sent_size, current_size);
+			memcpy(current_buf, &current_size, 8);
+			memcpy(current_buf + 8, buf + sent_size, current_size);
 			// send the current buffer
 			PostRMA(FT_RMA_WRITE, current_size, current_buf);
 			// increment the head

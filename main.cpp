@@ -257,18 +257,18 @@ int send_recv(int argc, char **argv) {
 			printf("synced\n");
 		}
 		con = client.GetConnection();
-		int values[1000];
-		uint8_t send_buf[4000];
-		// create an integer array with size 1000
-		for (int i = 0; i < 1000; i++) {
-			values[i] = i;
-		}
-		memcpy((uint8_t *)send_buf, (uint8_t *)values, 4000);
-		// now write this to buffer
-		for (int i = 0; i < 1000; i++) {
-			con->WriteData(send_buf, 4000);
-			con->WriteBuffers();
-		}
+//		int values[1000];
+//		uint8_t send_buf[4000];
+//		// create an integer array with size 1000
+//		for (int i = 0; i < 1000; i++) {
+//			values[i] = i;
+//		}
+//		memcpy((uint8_t *)send_buf, (uint8_t *)values, 4000);
+//		// now write this to buffer
+//		for (int i = 0; i < 1000; i++) {
+//			con->WriteData(send_buf, 4000);
+//			con->WriteBuffers();
+//		}
 
 		ret = client.sync();
 		if (ret) {
@@ -295,18 +295,18 @@ int send_recv(int argc, char **argv) {
 			printf("synced\n");
 		}
 
-		int values[1000];
-		uint8_t send_buf[4000];
-		// create an integer array with size 1000
-		for (int i = 0; i < 1000; i++) {
-			values[i] = i;
-		}
-		memcpy((uint8_t *)send_buf, (uint8_t *)values, 4000);
-		// now write this to buffer
-		for (int i = 0; i < 1000; i++) {
-			con->WriteData(send_buf, 4000);
-			con->WriteBuffers();
-		}
+//		int values[1000];
+//		uint8_t recv_buf[4000];
+//		// create an integer array with size 1000
+//		for (int i = 0; i < 1000; i++) {
+//			values[i] = i;
+//		}
+//		memcpy((uint8_t *)send_buf, (uint8_t *)values, 4000);
+//		// now write this to buffer
+//		for (int i = 0; i < 1000; i++) {
+//			con->WriteData(send_buf, 4000);
+//			con->WriteBuffers();
+//		}
 
 		ret = server.sync();
 		if (ret) {
