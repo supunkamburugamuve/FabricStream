@@ -89,7 +89,8 @@ int Connection::AllocateActiveResources() {
 			return ret;
 	}
 
-	ret = AllocMsgs();
+	// ret = AllocMsgs();
+	ret = AllocateBuffers();
 	if (ret) {
 		return ret;
 	}
