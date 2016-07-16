@@ -864,7 +864,7 @@ int Connection::CopyDataFromBuffer(int buf_no, void *buf, uint32_t size, uint32_
 		// first read the size
 		memcpy(&r, b, sizeof(r));
 		// next copy the buffer
-		memcpy(buf, b + sizeof(uint32_t), r);
+		memcpy(buf, b + sizeof(uint64_t), r);
 		*read = r;
 	} else {
 		*read = 0;
