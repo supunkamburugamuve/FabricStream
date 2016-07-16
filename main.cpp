@@ -304,10 +304,11 @@ int send_recv(int argc, char **argv) {
 //		}
 //		memcpy((uint8_t *)send_buf, (uint8_t *)values, 4000);
 //		// now write this to buffer
-//		for (int i = 0; i < 1000; i++) {
-//			con->WriteData(send_buf, 4000);
-//			con->WriteBuffers();
-//		}
+		con = server.GetConnection();
+		for (int i = 0; i < 1000; i++) {
+			con->receive();
+			// con->WriteBuffers();
+		}
 
 		ret = server.sync();
 		if (ret) {

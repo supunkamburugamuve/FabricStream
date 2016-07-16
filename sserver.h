@@ -31,6 +31,10 @@ public:
 	 */
 	ssize_t RMA(enum rdma_rma_opcodes op, size_t size);
 
+	inline Connection *GetConnection() {
+		return con;
+	}
+
 	int Finalize(void);
 private:
 	RDMAOptions *options;
