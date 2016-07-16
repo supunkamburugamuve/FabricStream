@@ -19,7 +19,7 @@ Buffer::Buffer(void *buf, uint64_t buf_size, uint32_t no_bufs) {
 	this->buffers = NULL;
 }
 
-int Buffer::Init(bool align) {
+int Buffer::Init() {
 	uint32_t i = 0;
 	uint32_t size = 0;
 	this->buffers = (void **)malloc(sizeof(void *) * no_bufs);

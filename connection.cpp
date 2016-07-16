@@ -210,7 +210,9 @@ int Connection::AllocateBuffers(void) {
 	}
 
 	this->send_buf = new Buffer(tx_buf, tx_size, opts->no_buffers);
+	this->send_buf->Init();
 	this->recv_buf = new Buffer(rx_buf, rx_size, opts->no_buffers);
+	this->recv_buf->Init();
 	return 0;
 }
 

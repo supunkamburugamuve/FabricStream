@@ -11,7 +11,7 @@ struct message {
 class Buffer {
 public:
 	Buffer(void *buf, uint64_t buf_size, uint32_t no_bufs);
-	int Init(bool align);
+	int Init();
 	virtual ~Buffer();
 	// increment the head
 	bool IncrementHead();
