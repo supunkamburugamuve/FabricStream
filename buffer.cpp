@@ -21,7 +21,6 @@ Buffer::Buffer(void *buf, uint64_t buf_size, uint32_t no_bufs) {
 
 int Buffer::Init() {
 	uint32_t i = 0;
-	uint32_t size = 0;
 	this->buffers = (void **)malloc(sizeof(void *) * no_bufs);
 	this->content_sizes = (uint32_t *)malloc(sizeof(uint32_t) * no_bufs);
 	this->buf_size = this->buf_size / this->no_bufs;
@@ -67,9 +66,6 @@ void Buffer::Free() {
 	}
 	if (this->content_sizes) {
 		free(this->content_sizes);
-	}
-	for (i = 0; i < no_bufs; i++) {
-		free(this->buffers[i]);
 	}
 	if (this->wr_ids) {
 		free(this->wr_ids);
